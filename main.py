@@ -3,6 +3,9 @@ import logging
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.status import HTTP_200_OK
+
+from config import settings
 
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.setLevel(logging.INFO)
@@ -41,7 +44,7 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
-@app.get("/", status_code=200, summary="Health Check")
+@app.get("/", status_code=HTTP_200_OK, summary="Health Check")
 def health_check_handler():
     return "For the better world by WIP"
 
@@ -49,8 +52,8 @@ def health_check_handler():
 initialize_log = f"""
 
 📍 WIP server running successfully.
-📍 Swagger URL: http://localhost:{8000}/docs
-📍 ReDoc URL: http://localhost:{8000}/redoc
+📍 Swagger URL: {settings.protocol}://{settings.host}:{settings.port}/docs
+📍 ReDoc URL: {settings.protocol}://{settings.host}:{settings.port}/redoc
 """
 
 uvicorn_logger.info(initialize_log)
