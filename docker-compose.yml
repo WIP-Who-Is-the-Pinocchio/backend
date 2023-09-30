@@ -1,0 +1,53 @@
+version: '3.8'
+
+networks:
+  wip-server-net:
+    driver: bridge
+
+volumes:
+  wip_data:
+
+
+services:
+  db:
+    image: mysql:latest
+    container_name: wip-mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: wip
+      MYSQL_USER: user
+      MYSQL_PASSWORD: wip
+      MYSQL_DATABASE: pinocchio
+      TZ: Asia/Seoul
+    volumes:
+      - wip_data:/var/lib/mysql
+      - ./docker/db/init:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "wip-mysql", "-uroot", "-pscratch"]
+      retries: 2
+    networks:
+      - wip-server-net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 2309:2309
+    container_name: wip-app
+    environment:
+      - TZ=Asia/Seoul
+    volumes:
+      - ../backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - wip-server-net
+    command:
+      - sh
+      - -c
+      - |
+        alembic upgrade head
+        uvicorn main:app --reload --host 0.0.0.0 --port 2309
