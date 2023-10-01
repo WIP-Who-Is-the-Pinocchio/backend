@@ -7,6 +7,8 @@ from starlette.status import HTTP_200_OK
 
 from config import settings
 
+from src.admin.auth.auth_router import router as AdminAuthApiRouter
+
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.setLevel(logging.INFO)
 
@@ -47,6 +49,13 @@ app.openapi = custom_openapi
 @app.get("/", status_code=HTTP_200_OK, summary="Health Check")
 def health_check_handler():
     return "For the better world by WIP"
+
+
+admin_api_version = 1
+default_admin_prefix = f"/admin/api/v{admin_api_version}"
+app.include_router(
+    AdminAuthApiRouter, prefix=f"{default_admin_prefix}/auth", tags=["admin_auth"]
+)
 
 
 initialize_log = f"""
