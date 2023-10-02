@@ -1,10 +1,8 @@
 from pydantic import BaseModel
 
+from admin.schema.admin_info_response import AdminInfoResponse
+
 
 class SignUpResponse(BaseModel):
-    id: int
-    login_name: str
-    nickname: str
-
-    class Config:
-        from_attributes = True
+    data: AdminInfoResponse
+    message: str = "Created new admin account successfully."
