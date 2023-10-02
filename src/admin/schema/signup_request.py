@@ -13,6 +13,7 @@ class SignUpRequest(BaseModel):
     nickname: str
 
     @field_validator("password", mode="before")
+    @classmethod
     def validate_password_length(cls, password):
         if len(password) < 8:
             logger.info("Received password with less than 8 characters.")
@@ -20,3 +21,4 @@ class SignUpRequest(BaseModel):
                 status_code=HTTP_400_BAD_REQUEST,
                 detail="The password must be at least 8 characters long.",
             )
+        return password
