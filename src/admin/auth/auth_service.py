@@ -20,13 +20,6 @@ async def create_admin(**kwargs):
         new_account_data.nickname,
     )
 
-    if len(password) < 8:
-        logger.info("Received password with less than 8 characters.")
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail="The password must be at least 8 characters long.",
-        )
-
     is_unique = admin_repository.check_uniqueness(login_name, nickname)
     if not is_unique:
         logger.info("Received duplicated value.")
