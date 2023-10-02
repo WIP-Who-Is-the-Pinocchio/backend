@@ -21,6 +21,8 @@ class Settings(BaseSettings, case_sensitive=True):
     mysql_settings: MysqlSettings = MysqlSettings()
     mysql_dsn: MySQLDsn = f"{mysql_settings.db_protocol}://{mysql_settings.db_user}:{mysql_settings.db_password}@{mysql_settings.db_host}:{mysql_settings.db_port}/{mysql_settings.database_name}"
     secret_key: str = Field(default="wip-secret", env="SECRET_KEY")
+    jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
+    access_token_exp: int = Field(default=1440, env="ACCESS_TOKEN_EXP")
 
 
 settings = Settings()
