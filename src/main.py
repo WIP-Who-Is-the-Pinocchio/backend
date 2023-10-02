@@ -6,8 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.status import HTTP_200_OK
 
 from config import settings
-
-from src.admin.auth.auth_router import router as AdminAuthApiRouter
+from admin.auth.auth_router import router as AdminAuthApiRouter
 
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.setLevel(logging.INFO)
