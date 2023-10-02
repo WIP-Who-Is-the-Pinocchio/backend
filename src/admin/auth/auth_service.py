@@ -1,10 +1,10 @@
 import logging
 
 from fastapi import HTTPException
-from starlette.status import HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST
+from starlette.status import HTTP_409_CONFLICT
 
-from src.admin.schema.signup_response import SignUpResponse
-from src.database.models import Admin
+from admin.schema.signup_response import SignUpResponse
+from database.models import Admin
 
 
 logger = logging.getLogger("uvicorn")

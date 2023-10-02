@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
 
-from src.database.repositories.admin_repository import AdminRepository
-from src.admin.auth.auth_manager import AuthManager
-from src.admin.auth.auth_service import create_admin
-from src.admin.schema.signup_request import SignUpRequest
+from database.repositories.admin_repository import AdminRepository
+from admin.auth.auth_manager import AuthManager
+from admin.auth.auth_service import create_admin
+from admin.schema.signup_request import SignUpRequest
 
 router = APIRouter()
 

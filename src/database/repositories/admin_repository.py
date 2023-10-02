@@ -2,8 +2,8 @@ from fastapi import Depends
 from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 
-from src.database.connection import get_db
-from src.database.models import Admin
+from database.connection import get_db
+from database.models import Admin
 
 
 class AdminRepository:
