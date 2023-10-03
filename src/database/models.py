@@ -20,3 +20,7 @@ class Admin(Base):
 
     def __repr__(self):
         return f"Admin(id={self.id}, login_name={self.login_name}, nickname={self.nickname})"
+
+    @classmethod
+    def create(cls, login_name: str, hashed_password: str, nickname: str) -> "Admin":
+        return cls(login_name=login_name, password=hashed_password, nickname=nickname)
