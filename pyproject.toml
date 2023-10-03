@@ -19,6 +19,7 @@ pytest = "^7.4.2"
 pytest-mock = "^3.11.1"
 httpx = "^0.25.0"
 python-jose = "^3.3.0"
+cryptography = "^41.0.4"
 
 
 [tool.poetry.group.dev.dependencies]
