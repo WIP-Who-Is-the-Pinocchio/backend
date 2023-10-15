@@ -18,13 +18,15 @@ class AdminRepository:
 
         return search_result is None
 
-    def create_admin(self, admin: Admin) -> Admin:
+    def save_admin_data(self, admin: Admin) -> Admin:
         self.session.add(admin)
         self.session.commit()
         self.session.refresh(admin)
         return admin
 
-    def get_admin(self, login_name: str) -> Admin | None:
-        select_query = select(Admin).where(Admin.login_name == login_name)
+    def get_admin_data(self, **kwargs) -> Admin | None:
+        field = list(kwargs.keys())[0]
+        value = list(kwargs.values())[0]
+        select_query = select(Admin).where(getattr(Admin, field) == value)
         search_result = self.session.scalar(select_query)
         return search_result
