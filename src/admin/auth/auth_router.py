@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from starlette.status import (
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
@@ -11,9 +11,11 @@ from starlette.status import (
 from admin.schema.login_request import LogInRequest
 from admin.schema.login_response import LoginResponse
 from admin.schema.signup_response import SignUpResponse
+from admin.schema.token_response import RefreshTokensResponse
+from admin.security import get_token
 from database.repositories.admin_repository import AdminRepository
 from admin.auth.auth_manager import AuthManager
-from admin.auth.auth_service import create_admin, admin_login
+from admin.auth.auth_service import create_admin, admin_login, refresh_access_token
 from admin.schema.signup_request import SignUpRequest
 
 router = APIRouter()
@@ -53,3 +55,22 @@ async def admin_login_handler(
     admin_repository: AdminRepository = Depends(),
 ):
     return await admin_login(**locals())
+
+
+@router.post(
+    "/refresh/{admin_id}",
+    status_code=HTTP_201_CREATED,
+    responses={
+        HTTP_201_CREATED: {"description": "Generated new access token"},
+        HTTP_401_UNAUTHORIZED: {"description": "Unauthorized refresh token"},
+        HTTP_404_NOT_FOUND: {"description": "Admin not found"},
+    },
+    summary="Access token 재발급",
+)
+async def refresh_handler(
+    admin_id: int = Path(..., description="admin id"),
+    token: str = Depends(get_token),
+    auth_manager: AuthManager = Depends(),
+    admin_repository: AdminRepository = Depends(),
+) -> RefreshTokensResponse:
+    return await refresh_access_token(**locals())
