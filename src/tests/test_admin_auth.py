@@ -15,8 +15,8 @@ def test_admin_signup_success(client, mocker):
     check_uniqueness_mock_function = mocker.patch.object(
         AdminRepository, "check_uniqueness", return_value=True
     )
-    hash_password_mock_function = mocker.patch.object(
-        AuthManager, "hash_password", return_value="hashed"
+    hash_text_mock_function = mocker.patch.object(
+        AuthManager, "hash_text", return_value="hashed"
     )
     create_admin_model_spy = mocker.spy(Admin, "create")
     mocker.patch.object(
@@ -30,7 +30,7 @@ def test_admin_signup_success(client, mocker):
     response = client.post("/admin/api/v1/auth/signup", json=body)
 
     check_uniqueness_mock_function.assert_called_once()
-    hash_password_mock_function.assert_called_once_with(body["password"])
+    hash_text_mock_function.assert_called_once_with(body["password"])
     create_admin_model_spy.assert_called_once_with(
         body["login_name"], "hashed", body["nickname"]
     )
@@ -46,7 +46,7 @@ def test_admin_signup_success(client, mocker):
         "login_name": body["login_name"],
         "nickname": body["nickname"],
     }
-    assert response.json()["message"] == "Created new admin account successfully."
+    assert response.json()["detail"] == "Created new admin account successfully."
 
 
 def test_admin_signup_with_short_password(client, mocker):
@@ -59,15 +59,15 @@ def test_admin_signup_with_short_password(client, mocker):
     check_uniqueness_mock_function = mocker.patch.object(
         AdminRepository, "check_uniqueness", return_value=True
     )
-    hash_password_mock_function = mocker.patch.object(
-        AuthManager, "hash_password", return_value="hashed"
+    hash_text_mock_function = mocker.patch.object(
+        AuthManager, "hash_text", return_value="hashed"
     )
     create_admin_model_spy = mocker.spy(Admin, "create")
 
     response = client.post("/admin/api/v1/auth/signup", json=body)
 
     check_uniqueness_mock_function.assert_not_called()
-    hash_password_mock_function.assert_not_called()
+    hash_text_mock_function.assert_not_called()
     create_admin_model_spy.assert_not_called()
 
     assert response.status_code == 400
@@ -86,15 +86,15 @@ def test_admin_signup_with_duplicated_data(client, mocker):
     check_uniqueness_mock_function = mocker.patch.object(
         AdminRepository, "check_uniqueness", return_value=False
     )
-    hash_password_mock_function = mocker.patch.object(
-        AuthManager, "hash_password", return_value="hashed"
+    hash_text_mock_function = mocker.patch.object(
+        AuthManager, "hash_text", return_value="hashed"
     )
     create_admin_model_spy = mocker.spy(Admin, "create")
 
     response = client.post("/admin/api/v1/auth/signup", json=body)
 
     check_uniqueness_mock_function.assert_called_once()
-    hash_password_mock_function.assert_not_called()
+    hash_text_mock_function.assert_not_called()
     create_admin_model_spy.assert_not_called()
 
     assert response.status_code == 409
@@ -115,9 +115,9 @@ def test_admin_login_success(client, mocker):
         "password": "wip-password",
     }
 
-    get_admin_mock_function = mocker.patch.object(
+    get_admin_data_mock_function = mocker.patch.object(
         AdminRepository,
-        "get_admin",
+        "get_admin_data",
         return_value=Admin(
             id=database["id"],
             login_name=database["login_name"],
@@ -125,14 +125,14 @@ def test_admin_login_success(client, mocker):
             nickname=database["nickname"],
         ),
     )
-    verify_password_mock_function = mocker.patch.object(
-        AuthManager, "verify_password", return_value=True
+    verify_text_mock_function = mocker.patch.object(
+        AuthManager, "verify_text", return_value=True
     )
 
     response = client.post("/admin/api/v1/auth/login", json=body)
 
-    get_admin_mock_function.assert_called_once_with(body["login_name"])
-    verify_password_mock_function.assert_called_once_with(
+    get_admin_data_mock_function.assert_called_once_with(login_name=body["login_name"])
+    verify_text_mock_function.assert_called_once_with(
         body["password"], database["password"]
     )
 
@@ -143,7 +143,7 @@ def test_admin_login_success(client, mocker):
         "nickname": database["nickname"],
     }
     assert response.json()["data"]["access_token"] is not None
-    assert response.json()["message"] == "Login success response with access token"
+    assert response.json()["detail"] == "Login success response with access token"
 
 
 def test_admin_login_with_wrong_login_name(client, mocker):
@@ -160,13 +160,13 @@ def test_admin_login_with_wrong_login_name(client, mocker):
         "password": "wip-password",
     }
 
-    get_admin_mock_function = mocker.patch.object(
+    get_admin_data_mock_function = mocker.patch.object(
         AdminRepository,
-        "get_admin",
+        "get_admin_data",
         return_value=None,
     )
-    verify_password_mock_function = mocker.patch.object(
-        AuthManager, "verify_password", return_value=True
+    verify_text_mock_function = mocker.patch.object(
+        AuthManager, "verify_text", return_value=True
     )
     create_access_token_mock_function = mocker.patch.object(
         AuthManager, "create_access_token", return_value="jwt_token"
@@ -174,8 +174,8 @@ def test_admin_login_with_wrong_login_name(client, mocker):
 
     response = client.post("/admin/api/v1/auth/login", json=body)
 
-    get_admin_mock_function.assert_called_once_with(body["login_name"])
-    verify_password_mock_function.assert_not_called()
+    get_admin_data_mock_function.assert_called_once_with(login_name=body["login_name"])
+    verify_text_mock_function.assert_not_called()
     create_access_token_mock_function.assert_not_called()
 
     assert response.status_code == 404
@@ -196,9 +196,9 @@ def test_admin_login_with_wrong_password(client, mocker):
         "password": "wrong-wip-password",
     }
 
-    get_admin_mock_function = mocker.patch.object(
+    get_admin_data_mock_function = mocker.patch.object(
         AdminRepository,
-        "get_admin",
+        "get_admin_data",
         return_value=Admin(
             id=database["id"],
             login_name=database["login_name"],
@@ -206,8 +206,8 @@ def test_admin_login_with_wrong_password(client, mocker):
             nickname=database["nickname"],
         ),
     )
-    verify_password_mock_function = mocker.patch.object(
-        AuthManager, "verify_password", return_value=False
+    verify_text_mock_function = mocker.patch.object(
+        AuthManager, "verify_text", return_value=False
     )
     create_access_token_mock_function = mocker.patch.object(
         AuthManager, "create_access_token", return_value="jwt_token"
@@ -215,8 +215,8 @@ def test_admin_login_with_wrong_password(client, mocker):
 
     response = client.post("/admin/api/v1/auth/login", json=body)
 
-    get_admin_mock_function.assert_called_once_with(body["login_name"])
-    verify_password_mock_function.assert_called_once_with(
+    get_admin_data_mock_function.assert_called_once_with(login_name=body["login_name"])
+    verify_text_mock_function.assert_called_once_with(
         body["password"], database["password"]
     )
     create_access_token_mock_function.assert_not_called()
