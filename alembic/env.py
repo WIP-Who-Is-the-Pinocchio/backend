@@ -36,7 +36,7 @@ target_metadata = Base.metadata
 def gen_revision(context, revision, directives):
     migration_script = directives[0]
     recent_revision = ScriptDirectory.from_config(context.config).get_current_head()
-    new_rev_id = int(recent_revision[:4] + 1 if recent_revision else 1)
+    new_rev_id = int(recent_revision[:4]) + 1 if recent_revision else 1
     migration_script.rev_id = f"{new_rev_id:04}_{uuid4().hex[-12:]}"
 
 
