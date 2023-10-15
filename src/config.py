@@ -20,9 +20,15 @@ class Settings(BaseSettings, case_sensitive=True):
     port: int = Field(default=2309, env="PORT")
     mysql_settings: MysqlSettings = MysqlSettings()
     mysql_dsn: MySQLDsn = f"{mysql_settings.db_protocol}://{mysql_settings.db_user}:{mysql_settings.db_password}@{mysql_settings.db_host}:{mysql_settings.db_port}/{mysql_settings.database_name}"
-    secret_key: str = Field(default="wip-secret", env="SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
-    access_token_exp: int = Field(default=1440, env="ACCESS_TOKEN_EXP")
+    access_token_secret_key: str = Field(
+        default="wip-access-secret", env="ACCESS_TOKEN_SECRET_KEY"
+    )
+    access_token_exp: int = Field(default=60, env="ACCESS_TOKEN_EXP")
+    refresh_token_secret_key: str = Field(
+        default="wip-refresh-secret", env="REFRESH_TOKEN_SECRET_KEY"
+    )
+    refresh_token_exp: int = Field(default=1440, env="REFRESH_TOKEN_EXP")
 
 
 settings = Settings()
