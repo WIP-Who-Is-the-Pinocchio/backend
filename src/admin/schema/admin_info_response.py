@@ -8,3 +8,7 @@ class AdminInfoResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class NicknameUniquenessResponse(BaseModel):
+    detail: str
