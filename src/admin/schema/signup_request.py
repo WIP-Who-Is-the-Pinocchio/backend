@@ -1,14 +1,14 @@
 import logging
 
 from fastapi import HTTPException
-from pydantic import BaseModel, field_validator, constr
+from pydantic import BaseModel, field_validator, constr, EmailStr
 from starlette.status import HTTP_400_BAD_REQUEST
 
 logger = logging.getLogger("uvicorn")
 
 
 class SignUpRequest(BaseModel):
-    login_name: constr(min_length=1)
+    email: EmailStr
     password: constr(min_length=1)
     nickname: constr(min_length=1)
 

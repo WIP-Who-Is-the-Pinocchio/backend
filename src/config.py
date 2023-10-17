@@ -1,4 +1,4 @@
-from pydantic import MySQLDsn, Field
+from pydantic import MySQLDsn, Field, EmailStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +10,12 @@ class MysqlSettings(BaseSettings):
     db_port: int = Field(default=3306, env="DB_PORT")
     database_name: str = Field(default="pinocchio", env="DB_NAME")
     echo: bool = Field(default=True, env="DB_ECHO")
+
+
+class RedisSettings(BaseSettings):
+    redis_host: str = Field(default="localhost", env="REDIS_HOST")
+    redis_port: int = Field(default=6379, env="REDIS_PORT")
+    auth_num_db: int = Field(default=0, env="AUTH_NUM_DB")
 
 
 class Settings(BaseSettings, case_sensitive=True):
@@ -29,6 +35,9 @@ class Settings(BaseSettings, case_sensitive=True):
         default="wip-refresh-secret", env="REFRESH_TOKEN_SECRET_KEY"
     )
     refresh_token_exp: int = Field(default=1440, env="REFRESH_TOKEN_EXP")
+    sender_gmail: EmailStr = Field(default="wipinocchio@gmail.com", env="SENDER_EMAIL")
+    gmail_password: str = Field(default="bpqb ecek ytcn mcsc", env="GMAIL_PASSWORD")
+    redis_settings: RedisSettings = RedisSettings()
 
 
 settings = Settings()

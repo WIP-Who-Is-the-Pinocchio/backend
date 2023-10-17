@@ -16,9 +16,14 @@
 ```bash
 docker pull mysql:latest
 ```
+3. Redis 이미지 다운로드
+```bash
+docker pull redis:latest
+```
+
 
 - 로컬 환경에 3306 포트 또는 MySQL 사용 중인지 포트 충돌 확인 필요
-  - 3306 포트 프로세스 또는 컨테이너 확인 
+  - 3306, 6379 포트 프로세스 또는 컨테이너 확인 
   - brew로 설치한 MySQL 정지 cmd
     ```bash
     brew services stop mysql

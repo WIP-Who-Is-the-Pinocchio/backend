@@ -6,6 +6,7 @@ networks:
 
 volumes:
   wip_data:
+  in_memory_data:
 
 
 services:
@@ -26,6 +27,19 @@ services:
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "wip-mysql", "-uroot", "-pscratch"]
       retries: 2
+    networks:
+      - wip-server-net
+
+  redis:
+    image: redis:latest
+    restart: 'always'
+    ports:
+      - 6379:6379
+    container_name: wip-redis
+    volumes:
+      - in_memory_data:/data
+    environment:
+      TZ: Asia/Seoul
     networks:
       - wip-server-net
 
