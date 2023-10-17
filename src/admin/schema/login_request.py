@@ -1,6 +1,6 @@
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr, EmailStr
 
 
 class LogInRequest(BaseModel):
-    login_name: constr(min_length=1)
+    email: EmailStr
     password: constr(min_length=1)

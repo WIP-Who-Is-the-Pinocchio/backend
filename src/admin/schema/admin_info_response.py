@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class AdminInfoResponse(BaseModel):
     id: int
-    login_name: str
+    email: EmailStr
     nickname: str
 
     class Config:
