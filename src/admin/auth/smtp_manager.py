@@ -14,7 +14,9 @@ class SmtpManager:
     smtp_server: str = "smtp.gmail.com"
     sender_email: EmailStr = settings.sender_gmail
     gmail_password: str = settings.gmail_password
-    smtp = SMTP_SSL(smtp_server, 465)
+
+    def __init__(self):
+        self.smtp = SMTP_SSL(self.smtp_server, 465)
 
     def send_auth_num(self, requested_email: str, auth_num: int):
         try:
