@@ -17,7 +17,10 @@ from admin.schema.login_response import (
     LoginResponse,
     LoginResponseData,
 )
-from admin.schema.admin_info_response import AdminInfoResponse
+from admin.schema.admin_info_response import (
+    AdminInfoResponse,
+    NicknameUniquenessResponse,
+)
 from admin.schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
 from admin.schema.signup_response import SignUpResponse
 from admin.schema.token_response import (
@@ -211,3 +214,13 @@ async def verify_email_auth_number(**kwargs) -> VerifyAuthNumResponse:
 
     delete_auth_number(email)
     return VerifyAuthNumResponse()
+
+
+async def check_nickname_uniqueness(**kwargs) -> NicknameUniquenessResponse:
+    nickname = kwargs["nickname"]
+    admin_repository = kwargs["admin_repository"]
+
+    search_result = admin_repository.get_admin_data(nickname=nickname)
+    if search_result:
+        return NicknameUniquenessResponse(detail="Nickname already exists.")
+    return NicknameUniquenessResponse(detail="Available nickname.")

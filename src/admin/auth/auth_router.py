@@ -10,6 +10,7 @@ from starlette.status import (
 )
 
 from admin.auth.smtp_manager import SmtpManager
+from admin.schema.admin_info_response import NicknameUniquenessResponse
 from admin.schema.login_request import LogInRequest
 from admin.schema.login_response import LoginResponse
 from admin.schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
@@ -24,6 +25,7 @@ from admin.auth.auth_service import (
     refresh_access_token,
     send_auth_number_email,
     verify_email_auth_number,
+    check_nickname_uniqueness,
 )
 from admin.schema.signup_request import SignUpRequest
 
@@ -122,3 +124,19 @@ async def email_authorization_handler(
     smtp_manager: SmtpManager = Depends(),
 ) -> VerifyAuthNumResponse:
     return await verify_email_auth_number(**locals())
+
+
+@router.get(
+    "/nickname/{nickname}",
+    status_code=HTTP_200_OK,
+    responses={
+        HTTP_200_OK: {"description": "Nickname unique check result"},
+        HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Database error occurred"},
+    },
+    summary="닉네임 중복체크",
+)
+async def nickname_unique_check_handler(
+    nickname: str = Path(..., description="중복 확인 대상 닉네임"),
+    admin_repository: AdminRepository = Depends(),
+) -> NicknameUniquenessResponse:
+    return await check_nickname_uniqueness(**locals())
