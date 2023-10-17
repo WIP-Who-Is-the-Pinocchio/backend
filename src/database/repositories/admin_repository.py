@@ -1,22 +1,40 @@
-from fastapi import Depends
+import logging
+
+from fastapi import Depends, HTTPException
 from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
+from starlette.status import HTTP_409_CONFLICT
 
 from database.connection import get_db
 from database.models import Admin
+
+
+logger = logging.getLogger("uvicorn")
 
 
 class AdminRepository:
     def __init__(self, session: Session = Depends(get_db)) -> None:
         self.session = session
 
-    def check_uniqueness(self, login_name: str, nickname: str) -> bool:
+    def check_uniqueness(self, email: str, nickname: str) -> bool | None:
         select_query = select(Admin).where(
-            or_(Admin.login_name == login_name, Admin.nickname == nickname)
+            or_(Admin.email == email, Admin.nickname == nickname)
         )
         search_result = self.session.scalar(select_query)
-
-        return search_result is None
+        if search_result is None:
+            return
+        elif search_result.email == email:
+            logger.info("Received duplicated email.")
+            raise HTTPException(
+                status_code=HTTP_409_CONFLICT,
+                detail="Email should be unique.",
+            )
+        elif search_result.nickname == nickname:
+            logger.info("Received duplicated nickname.")
+            raise HTTPException(
+                status_code=HTTP_409_CONFLICT,
+                detail="Nickname should be unique.",
+            )
 
     def save_admin_data(self, admin: Admin) -> Admin:
         self.session.add(admin)
