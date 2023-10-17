@@ -56,7 +56,7 @@ async def admin_signup_handler(
     responses={
         HTTP_200_OK: {"description": "Login success", "model": LoginResponse},
         HTTP_401_UNAUTHORIZED: {"description": "Wrong password"},
-        HTTP_404_NOT_FOUND: {"description": "Login name not found"},
+        HTTP_404_NOT_FOUND: {"description": "Email not found"},
     },
     summary="관리자 로그인",
 )
