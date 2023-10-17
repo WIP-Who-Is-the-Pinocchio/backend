@@ -154,6 +154,14 @@ async def refresh_access_token(**kwargs) -> RefreshTokensResponse:
 async def send_auth_number_email(**kwargs) -> SendAuthNumResponse:
     email = kwargs["email"]
     smtp_manager = kwargs["smtp_manager"]
+    admin_repository = kwargs["admin_repository"]
+
+    search_result = admin_repository.get_admin_data(email=email)
+    if search_result:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Cannot send authorization email to existing admin",
+        )
 
     auth_number = random.randint(111111, 999999)
     smtp_manager.send_auth_num(email, auth_number)

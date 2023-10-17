@@ -96,6 +96,9 @@ async def refresh_handler(
         HTTP_201_CREATED: {
             "description": "Send email with auth number and saved in-memory data successfully"
         },
+        HTTP_400_BAD_REQUEST: {
+            "description": "Cannot send authorization email to existing admin"
+        },
         HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Redis error occurred"},
     },
     summary="인증번호 이메일 발송",
@@ -103,6 +106,7 @@ async def refresh_handler(
 async def send_signup_email_handler(
     email: str = Path(..., description="가입 대기 이메일"),
     smtp_manager: SmtpManager = Depends(),
+    admin_repository: AdminRepository = Depends(),
 ) -> SendAuthNumResponse:
     return await send_auth_number_email(**locals())
 
