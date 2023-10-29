@@ -13,17 +13,17 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
 )
 
-from admin.schema.login_response import (
+from schema.login_response import (
     LoginResponse,
     LoginResponseData,
 )
-from admin.schema.admin_info_response import (
+from schema.admin_info_response import (
     AdminInfoResponse,
     NicknameUniquenessResponse,
 )
-from admin.schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
-from admin.schema.signup_response import SignUpResponse
-from admin.schema.token_response import (
+from schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
+from schema.signup_response import SignUpResponse
+from schema.token_response import (
     RefreshTokensResponse,
     Tokens,
     TokenDecodeResponse,
@@ -106,7 +106,7 @@ async def admin_login(**kwargs) -> LoginResponse:
 
 async def refresh_access_token(**kwargs) -> RefreshTokensResponse:
     admin_id = kwargs["admin_id"]
-    refresh_token = kwargs["token"]
+    refresh_token = kwargs["body"].dict()["refresh_token"]
     auth_manager = kwargs["auth_manager"]
     admin_repository = kwargs["admin_repository"]
 
