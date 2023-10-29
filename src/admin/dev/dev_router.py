@@ -4,7 +4,7 @@ from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FO
 from admin.auth.auth_manager import AuthManager
 from admin.security import get_token
 from database.models import Admin
-from database.repositories.admin_repository import AdminRepository
+from repositories.admin_repository import AdminRepository
 
 router = APIRouter()
 

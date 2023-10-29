@@ -15,3 +15,7 @@ class Tokens(BaseModel):
 class RefreshTokensResponse(BaseModel):
     data: Tokens
     detail: str = "Refreshed token data"
+
+
+class RefreshTokensRequest(BaseModel):
+    refresh_token: str
