@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, Body
 from starlette.status import (
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
@@ -10,14 +10,14 @@ from starlette.status import (
 )
 
 from admin.auth.smtp_manager import SmtpManager
-from admin.schema.admin_info_response import NicknameUniquenessResponse
-from admin.schema.login_request import LogInRequest
-from admin.schema.login_response import LoginResponse
-from admin.schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
-from admin.schema.signup_response import SignUpResponse
-from admin.schema.token_response import RefreshTokensResponse
+from schema.admin_info_response import NicknameUniquenessResponse
+from schema.login_request import LogInRequest
+from schema.login_response import LoginResponse
+from schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
+from schema.signup_response import SignUpResponse
+from schema.token_response import RefreshTokensResponse, RefreshTokensRequest
 from admin.security import get_token
-from database.repositories.admin_repository import AdminRepository
+from repositories.admin_repository import AdminRepository
 from admin.auth.auth_manager import AuthManager
 from admin.auth.auth_service import (
     create_admin,
@@ -27,7 +27,7 @@ from admin.auth.auth_service import (
     verify_email_auth_number,
     check_nickname_uniqueness,
 )
-from admin.schema.signup_request import SignUpRequest
+from schema.signup_request import SignUpRequest
 
 router = APIRouter()
 
@@ -81,10 +81,10 @@ async def admin_login_handler(
 )
 async def refresh_handler(
     admin_id: int = Path(..., description="admin id"),
-    token: str = Depends(get_token),
     auth_manager: AuthManager = Depends(),
     admin_repository: AdminRepository = Depends(),
     smtp_manager: SmtpManager = Depends(),
+    body: RefreshTokensRequest = Body(...),
 ) -> RefreshTokensResponse:
     return await refresh_access_token(**locals())
 

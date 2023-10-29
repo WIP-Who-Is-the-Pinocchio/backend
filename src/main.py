@@ -8,6 +8,8 @@ from starlette.status import HTTP_200_OK
 from config import settings
 from admin.auth.auth_router import router as AdminAuthApiRouter
 from admin.dev.dev_router import router as AdminDevApiRouter
+from admin.politician.politician_router import router as AdminPoliticianApiRouter
+
 
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.setLevel(logging.INFO)
@@ -59,7 +61,11 @@ app.include_router(
 app.include_router(
     AdminDevApiRouter, prefix=f"{default_admin_prefix}/dev", tags=["admin_dev"]
 )
-
+app.include_router(
+    AdminPoliticianApiRouter,
+    prefix=f"{default_admin_prefix}/politician",
+    tags=["admin_politician"],
+)
 
 initialize_log = f"""
 

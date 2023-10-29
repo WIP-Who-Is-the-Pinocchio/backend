@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from jose import jwt, ExpiredSignatureError
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from admin.schema.token_response import TokenDecodeResponse
+from schema.token_response import TokenDecodeResponse
 from config import settings
 
 

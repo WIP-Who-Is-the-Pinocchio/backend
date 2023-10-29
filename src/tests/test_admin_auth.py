@@ -2,7 +2,7 @@ from datetime import datetime
 
 from admin.auth.auth_manager import AuthManager
 from database.models import Admin
-from database.repositories.admin_repository import AdminRepository
+from repositories.admin_repository import AdminRepository
 
 
 def test_admin_signup_success(client, mocker):

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from admin.schema.admin_info_response import AdminInfoResponse
+from schema.admin_info_response import AdminInfoResponse
 
 
 class LoginResponseData(BaseModel):
