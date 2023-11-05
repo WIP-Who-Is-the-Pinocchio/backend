@@ -9,7 +9,7 @@ class MysqlSettings(BaseSettings):
     db_host: str = Field(default="localhost", env="DB_HOST")
     db_port: int = Field(default=3306, env="DB_PORT")
     database_name: str = Field(default="pinocchio", env="DB_NAME")
-    echo: bool = Field(default=True, env="DB_ECHO")
+    echo: bool = Field(default=False, env="DB_ECHO")
 
 
 class RedisSettings(BaseSettings):
