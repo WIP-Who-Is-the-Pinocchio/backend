@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from fastapi import Depends
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 from sqlalchemy.orm import Session, registry
 
 from schema.politician_request import (
@@ -65,3 +65,24 @@ class PoliticianInfoRepository:
     def bulk_insert_promise_count_detail_data(self, data: List[dict]):
         query = insert(self.promise_count_detail_model).values(data)
         self.session.execute(query)
+
+    def select_politician_data_by_id(self, politician_id: int):
+        query = (
+            select(
+                self.politician_model,
+                self.committee_model,
+                self.promise_count_detail_model,
+            )
+            .select_from(self.politician_model)
+            .filter_by(id=politician_id)
+            .join(
+                self.committee_model,
+                self.committee_model.politician_id == politician_id,
+            )
+            .join(
+                self.promise_count_detail_model,
+                self.promise_count_detail_model.politician_id == politician_id,
+            )
+        )
+        select_result = self.session.execute(query).scalar()
+        return select_result
