@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import Depends
 from sqlalchemy import insert
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, registry
 
 from schema.politician_request import (
     PoliticianReqSchema,
@@ -41,7 +41,6 @@ class PoliticianInfoRepository:
         self, politician_id: int, committee_list: List[PoliticianCommitteeReqSchema]
     ):
         bulk_data = []
-        print(committee_list)
         for committee in committee_list:
             data = dict()
             data["politician_id"] = politician_id
@@ -49,4 +48,20 @@ class PoliticianInfoRepository:
             data["name"] = committee.name
             bulk_data.append(data)
         query = insert(self.committee_model).values(bulk_data)
+        self.session.execute(query)
+
+    def bulk_insert_politician_data(self, data: List[dict]) -> List[int]:
+        inserted_politician_id_list = []
+        for single_data in data:
+            query = insert(self.politician_model).values(single_data)
+            insert_result = self.session.execute(query).inserted_primary_key
+            inserted_politician_id_list.append(insert_result[0])
+        return inserted_politician_id_list
+
+    def bulk_insert_committee_data(self, data: List[dict]) -> None:
+        query = insert(self.committee_model).values(data)
+        self.session.execute(query)
+
+    def bulk_insert_promise_count_detail_data(self, data: List[dict]):
+        query = insert(self.promise_count_detail_model).values(data)
         self.session.execute(query)

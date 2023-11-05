@@ -1,16 +1,15 @@
 import logging
+from itertools import chain
 
 from fastapi import Depends, HTTPException
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR, HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 from database.connection import get_db
-from database.models import Admin
 from repositories.area_repository import AreaRepository
 from repositories.politician_info_repository import PoliticianInfoRepository
-from schema.politician_response import PoliticianRes
-from schema.token_response import TokenDecodeResponse
+from schema.politician_response import PoliticianRes, BulkPoliticianRes
 
 logger = logging.getLogger("uvicorn")
 
@@ -21,7 +20,7 @@ class PoliticianService:
         self.politician_info_repo = PoliticianInfoRepository(session)
         self.area_repo = AreaRepository(session)
 
-    async def create_new_politician_data(self, **kwargs):
+    async def create_new_politician_data(self, **kwargs) -> PoliticianRes:
         admin_id = kwargs["admin_id"]
         new_politician_data = kwargs["request"]
 
@@ -36,11 +35,9 @@ class PoliticianService:
                 new_politician_id, new_politician_data.promise_count_detail
             )
             for constituency_data in new_politician_data.constituency:
-                constituency_result = self.area_repo.search_constituency_data(
-                    constituency_data
-                )
+                constituency_id = self.area_repo.get_constituency_id(constituency_data)
                 self.area_repo.insert_jurisdiction_data(
-                    new_politician_id, constituency_result.id
+                    new_politician_id, constituency_id
                 )
 
             self.session.commit()
@@ -55,3 +52,86 @@ class PoliticianService:
 
         logger.info(f"admin {admin_id} inserted politician data: {new_politician_data}")
         return PoliticianRes(politician_id=new_politician_id)
+
+    async def create_bulk_politician_data(self, **kwargs) -> BulkPoliticianRes:
+        admin_id = kwargs["admin_id"]
+        new_politician_data_list = kwargs["request"]
+
+        try:
+            parsed_politician_data = [
+                single_politician.base_info.model_dump()
+                for single_politician in new_politician_data_list
+            ]
+            inserted_politician_id_list = (
+                self.politician_info_repo.bulk_insert_politician_data(
+                    parsed_politician_data
+                )
+            )
+
+            committee_data_list = list(
+                chain.from_iterable(
+                    [
+                        [
+                            {"politician_id": politician_id, **committee.dict()}
+                            for committee in politician.committee
+                        ]
+                        for politician_id, politician in zip(
+                            inserted_politician_id_list, new_politician_data_list
+                        )
+                    ]
+                )
+            )
+            self.politician_info_repo.bulk_insert_committee_data(committee_data_list)
+
+            promise_count_detail_data_list = list(
+                chain.from_iterable(
+                    [
+                        [
+                            {
+                                "politician_id": politician_id,
+                                **politician.promise_count_detail.dict(),
+                            }
+                        ]
+                        for politician_id, politician in zip(
+                            inserted_politician_id_list, new_politician_data_list
+                        )
+                    ]
+                )
+            )
+            self.politician_info_repo.bulk_insert_promise_count_detail_data(
+                promise_count_detail_data_list
+            )
+
+            jurisdiction_data_list = list(
+                chain.from_iterable(
+                    [
+                        [
+                            {
+                                "politician_id": politician_id,
+                                "constituency_id": self.area_repo.get_constituency_id(
+                                    constituency
+                                ),
+                            }
+                            for constituency in politician.constituency
+                        ]
+                        for politician_id, politician in zip(
+                            inserted_politician_id_list, new_politician_data_list
+                        )
+                    ]
+                )
+            )
+            self.area_repo.bulk_insert_jurisdiction_data(jurisdiction_data_list)
+
+            self.session.commit()
+        except DatabaseError as e:
+            self.session.rollback()
+            logger.exception(str(e))
+            raise HTTPException(
+                status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            )
+        finally:
+            self.session.close()
+
+        data_count = len(new_politician_data_list)
+        logger.info(f"admin {admin_id} inserted {data_count} politician data")
+        return BulkPoliticianRes(new_politician_data_count=data_count)
