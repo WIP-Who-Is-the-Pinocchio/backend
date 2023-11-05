@@ -64,3 +64,25 @@ class AreaRepository:
     def bulk_insert_jurisdiction_data(self, data: List[dict]):
         query = insert(self.jurisdiction_model).values(data)
         self.session.execute(query)
+
+    def select_jurisdiction_data_by_politician_id(self, politician_id: int):
+        query = (
+            select(
+                self.constituency_model.assembly_term,
+                self.region_model.region,
+                self.constituency_model.district,
+                self.constituency_model.section,
+            )
+            .select_from(self.constituency_model)
+            .filter(self.jurisdiction_model.politician_id == politician_id)
+            .join(
+                self.jurisdiction_model,
+                self.constituency_model.id == self.jurisdiction_model.constituency_id,
+            )
+            .join(
+                self.region_model,
+                self.region_model.id == self.constituency_model.region_id,
+            )
+        )
+        select_result = self.session.execute(query).all()
+        return select_result
