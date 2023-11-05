@@ -9,7 +9,12 @@ from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 from database.connection import get_db
 from repositories.area_repository import AreaRepository
 from repositories.politician_info_repository import PoliticianInfoRepository
-from schema.politician_response import PoliticianRes, BulkPoliticianRes
+from schema.politician_response import (
+    AddPoliticianDataRes,
+    AddBulkPoliticianDataRes,
+    GetSinglePoliticianDataRes,
+    ConstituencyResSchema,
+)
 
 logger = logging.getLogger("uvicorn")
 
@@ -20,7 +25,7 @@ class PoliticianService:
         self.politician_info_repo = PoliticianInfoRepository(session)
         self.area_repo = AreaRepository(session)
 
-    async def create_new_politician_data(self, **kwargs) -> PoliticianRes:
+    async def create_new_politician_data(self, **kwargs) -> AddPoliticianDataRes:
         admin_id = kwargs["admin_id"]
         new_politician_data = kwargs["request"]
 
@@ -51,9 +56,9 @@ class PoliticianService:
             self.session.close()
 
         logger.info(f"admin {admin_id} inserted politician data: {new_politician_data}")
-        return PoliticianRes(politician_id=new_politician_id)
+        return AddPoliticianDataRes(politician_id=new_politician_id)
 
-    async def create_bulk_politician_data(self, **kwargs) -> BulkPoliticianRes:
+    async def create_bulk_politician_data(self, **kwargs) -> AddBulkPoliticianDataRes:
         admin_id = kwargs["admin_id"]
         new_politician_data_list = kwargs["request"]
 
@@ -134,4 +139,23 @@ class PoliticianService:
 
         data_count = len(new_politician_data_list)
         logger.info(f"admin {admin_id} inserted {data_count} politician data")
-        return BulkPoliticianRes(new_politician_data_count=data_count)
+        return AddBulkPoliticianDataRes(new_politician_data_count=data_count)
+
+    def get_politician_by_id(
+        self, assembly_term: int, politician_id: int
+    ) -> GetSinglePoliticianDataRes:
+        politician_data = self.politician_info_repo.select_politician_data_by_id(
+            politician_id
+        )
+        jurisdiction_data = self.area_repo.select_jurisdiction_data_by_politician_id(
+            politician_id
+        )
+        constituency_list = [
+            ConstituencyResSchema(region=data[1], district=data[2], section=data[3])
+            for data in jurisdiction_data
+        ]
+
+        return_res = GetSinglePoliticianDataRes.model_validate(politician_data)
+        return_res.assembly_term = assembly_term
+        return_res.constituency = constituency_list
+        return return_res
