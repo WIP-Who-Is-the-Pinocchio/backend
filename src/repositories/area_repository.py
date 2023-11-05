@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import Depends, HTTPException
 from sqlalchemy import select, insert
 from sqlalchemy.orm import Session
@@ -17,7 +19,7 @@ class AreaRepository:
     def __init__(self, session: Session = Depends(get_db)) -> None:
         self.session = session
 
-    def search_constituency_data(self, data: ConstituencyReqSchema) -> Constituency:
+    def get_constituency_id(self, data: ConstituencyReqSchema) -> int:
         region, district, section = data
         region_name = region[1]
         district_name = district[1]
@@ -51,10 +53,14 @@ class AreaRepository:
                 detail="Constituency info not found",
             )
 
-        return search_result
+        return search_result.id
 
     def insert_jurisdiction_data(self, politician_id: int, constituency_id: int):
         query = insert(self.jurisdiction_model).values(
             politician_id=politician_id, constituency_id=constituency_id
         )
+        self.session.execute(query)
+
+    def bulk_insert_jurisdiction_data(self, data: List[dict]):
+        query = insert(self.jurisdiction_model).values(data)
         self.session.execute(query)
