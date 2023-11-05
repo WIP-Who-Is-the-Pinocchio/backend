@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/{admin_id}",
+    "",
     status_code=HTTP_201_CREATED,
     responses={
         HTTP_201_CREATED: {"description": "Created new politician data"},
@@ -39,7 +39,7 @@ async def add_politician_handler(
 
 
 @router.post(
-    "/bulk/{admin_id}",
+    "/bulk",
     status_code=HTTP_201_CREATED,
     responses={
         HTTP_201_CREATED: {"description": "Created new politician data"},
