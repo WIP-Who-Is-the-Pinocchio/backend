@@ -15,6 +15,7 @@ from schema.politician_response import (
     AddPoliticianDataRes,
     AddBulkPoliticianDataRes,
     GetSinglePoliticianDataRes,
+    ConstituencyResSchema,
 )
 
 router = APIRouter()
@@ -73,3 +74,22 @@ async def get_single_politician_handler(
     politician_service: PoliticianService = Depends(),
 ) -> GetSinglePoliticianDataRes:
     return politician_service.get_politician_by_id(assembly_term, politician_id)
+
+
+@router.get(
+    "/constituency/{assembly_term}/{region}",
+    status_code=HTTP_200_OK,
+    responses={
+        HTTP_200_OK: {"description": "Get single politician data"},
+        HTTP_400_BAD_REQUEST: {"description": "Bad request"},
+        HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
+    },
+    summary="국회 회기별 지역구 데이터 조회",
+)
+async def get_constituency_handler(
+    admin_id: str = Depends(get_token),
+    assembly_term: int = Path(..., description="국회 회기"),
+    region: str = Path(..., description="대분류 지역구(영문 소문자)"),
+    politician_service: PoliticianService = Depends(),
+) -> List[ConstituencyResSchema]:
+    return politician_service.get_constituency_data(assembly_term, region)
