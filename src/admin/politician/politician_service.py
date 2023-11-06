@@ -1,11 +1,13 @@
 import logging
 from itertools import chain
+from typing import List
 
 from fastapi import Depends, HTTPException
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
+from common.enums import RegionType
 from database.connection import get_db
 from repositories.area_repository import AreaRepository
 from repositories.politician_info_repository import PoliticianInfoRepository
@@ -159,3 +161,16 @@ class PoliticianService:
         return_res.assembly_term = assembly_term
         return_res.constituency = constituency_list
         return return_res
+
+    def get_constituency_data(
+        self, assembly_term: int, region: str
+    ) -> List[ConstituencyResSchema]:
+        region_name = RegionType[region.upper()].value[1]
+        constituency_obj_list = self.area_repo.select_constituency_data_by_region(
+            assembly_term, region_name
+        )
+        constituency_list = [
+            ConstituencyResSchema(region=data[0], district=data[1], section=data[2])
+            for data in constituency_obj_list
+        ]
+        return constituency_list

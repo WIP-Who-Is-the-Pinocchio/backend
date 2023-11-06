@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, and_
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
@@ -19,13 +19,9 @@ class AreaRepository:
     def __init__(self, session: Session = Depends(get_db)) -> None:
         self.session = session
 
-    def get_constituency_id(self, data: ConstituencyReqSchema) -> int:
-        region, district, section = data
-        region_name = region[1]
-        district_name = district[1]
-        section_name = section[1]
-
-        region_id = next(
+    @staticmethod
+    def get_region_id(region_name: str) -> int:
+        return next(
             (
                 region.value[0]
                 for region in RegionType
@@ -33,6 +29,22 @@ class AreaRepository:
             ),
             None,
         )
+
+    def get_constituency_id(self, data: ConstituencyReqSchema) -> int:
+        region, district, section = data
+        region_name = region[1]
+        district_name = district[1]
+        section_name = section[1]
+
+        region_id = self.get_region_id(region_name)
+        # region_id = next(
+        #     (
+        #         region.value[0]
+        #         for region in RegionType
+        #         if region.value[1] == region_name
+        #     ),
+        #     None,
+        # )
 
         if not region_id:
             raise HTTPException(
@@ -78,6 +90,29 @@ class AreaRepository:
             .join(
                 self.jurisdiction_model,
                 self.constituency_model.id == self.jurisdiction_model.constituency_id,
+            )
+            .join(
+                self.region_model,
+                self.region_model.id == self.constituency_model.region_id,
+            )
+        )
+        select_result = self.session.execute(query).all()
+        return select_result
+
+    def select_constituency_data_by_region(
+        self, assembly_term: int, region_name: str
+    ) -> List[any]:
+        region_id = self.get_region_id(region_name)
+        query = (
+            select(
+                self.region_model.region,
+                self.constituency_model.district,
+                self.constituency_model.section,
+            )
+            .select_from(self.constituency_model)
+            .filter_by(
+                region_id=region_id,
+                assembly_term=assembly_term,
             )
             .join(
                 self.region_model,
