@@ -16,6 +16,7 @@ from schema.politician_response import (
     AddBulkPoliticianDataRes,
     GetSinglePoliticianDataRes,
     ConstituencyResSchema,
+    GetPoliticianElementOfListRes,
 )
 
 logger = logging.getLogger("uvicorn")
@@ -174,3 +175,23 @@ class PoliticianService:
             for data in constituency_obj_list
         ]
         return constituency_list
+
+    def get_politician_list(
+        self, assembly_term: int
+    ) -> List[GetPoliticianElementOfListRes]:
+        politician_list = self.politician_info_repo.get_politician_list_data_for_admin()
+        return_res = []
+        for politician in politician_list:
+            jurisdiction_data = (
+                self.area_repo.select_jurisdiction_data_by_politician_id(
+                    politician[0].id
+                )
+            )
+            constituency_list = [
+                ConstituencyResSchema(region=data[1], district=data[2], section=data[3])
+                for data in jurisdiction_data
+            ]
+            politician_res = GetPoliticianElementOfListRes.model_validate(politician[0])
+            politician_res.constituency = constituency_list
+            return_res.append(politician_res)
+        return return_res
