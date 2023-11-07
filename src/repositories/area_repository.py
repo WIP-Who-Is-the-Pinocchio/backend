@@ -37,15 +37,6 @@ class AreaRepository:
         section_name = section[1]
 
         region_id = self.get_region_id(region_name)
-        # region_id = next(
-        #     (
-        #         region.value[0]
-        #         for region in RegionType
-        #         if region.value[1] == region_name
-        #     ),
-        #     None,
-        # )
-
         if not region_id:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
