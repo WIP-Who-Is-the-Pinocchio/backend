@@ -50,7 +50,7 @@ class ConstituencyResSchema(BaseModel):
         from_attributes = True
 
 
-class GetSinglePoliticianDataRes(BaseModel):
+class PoliticianResSchema(BaseModel):
     id: int
     name: str
     assembly_term: Optional[int] = None
@@ -68,8 +68,21 @@ class GetSinglePoliticianDataRes(BaseModel):
     total_required_funds: Optional[int] = None
     total_secured_funds: Optional[int] = None
     total_executed_funds: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class GetSinglePoliticianDataRes(PoliticianResSchema):
     promise_count_detail: PromiseCountDetailResSchema
     committee: List[PoliticianCommitteeResSchema]
+    constituency: Optional[List[ConstituencyResSchema]] = None
+
+    class Config:
+        from_attributes = True
+
+
+class GetPoliticianElementOfListRes(PoliticianResSchema):
     constituency: Optional[List[ConstituencyResSchema]] = None
 
     class Config:
