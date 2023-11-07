@@ -10,13 +10,11 @@ from starlette.status import (
 )
 
 from admin.auth.smtp_manager import SmtpManager
-from schema.admin_info_response import NicknameUniquenessResponse
+from schema.admin_info_response import NicknameUniquenessResponse, AdminInfoResponse
 from schema.login_request import LogInRequest
-from schema.login_response import LoginResponse
+from schema.login_response import LoginRes
 from schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
-from schema.signup_response import SignUpResponse
-from schema.token_response import RefreshTokensResponse, RefreshTokensRequest
-from admin.security import get_token
+from schema.token_response import RefreshTokensRequest, Tokens
 from repositories.admin_repository import AdminRepository
 from admin.auth.auth_manager import AuthManager
 from admin.auth.auth_service import (
@@ -46,7 +44,7 @@ async def admin_signup_handler(
     request: SignUpRequest,
     auth_manager: AuthManager = Depends(),
     admin_repository: AdminRepository = Depends(),
-) -> SignUpResponse:
+) -> AdminInfoResponse:
     return await create_admin(**locals())
 
 
@@ -54,7 +52,7 @@ async def admin_signup_handler(
     "/login",
     status_code=HTTP_200_OK,
     responses={
-        HTTP_200_OK: {"description": "Login success", "model": LoginResponse},
+        HTTP_200_OK: {"description": "Login success"},
         HTTP_401_UNAUTHORIZED: {"description": "Wrong password"},
         HTTP_404_NOT_FOUND: {"description": "Email not found"},
     },
@@ -65,7 +63,7 @@ async def admin_login_handler(
     auth_manager: AuthManager = Depends(),
     admin_repository: AdminRepository = Depends(),
     smtp_manager: SmtpManager = Depends(),
-):
+) -> LoginRes:
     return await admin_login(**locals())
 
 
@@ -85,7 +83,7 @@ async def refresh_handler(
     admin_repository: AdminRepository = Depends(),
     smtp_manager: SmtpManager = Depends(),
     body: RefreshTokensRequest = Body(...),
-) -> RefreshTokensResponse:
+) -> Tokens:
     return await refresh_access_token(**locals())
 
 
