@@ -92,3 +92,13 @@ class PoliticianInfoRepository:
             select(self.politician_model)
         ).all()
         return total_politician_data
+
+    def get_politician_search_data_for_admin(self, name: str = None, party: str = None):
+        query = select(self.politician_model)
+        filtered_query = (
+            query.filter(self.politician_model.name.like(f"%{name}%"))
+            if name
+            else query.filter(self.politician_model.political_party.like(f"%{party}%"))
+        )
+        search_result = self.session.execute(filtered_query).all()
+        return search_result
