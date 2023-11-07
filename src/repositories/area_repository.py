@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import select, insert, and_
+from sqlalchemy import select, insert
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
@@ -99,9 +99,7 @@ class AreaRepository:
         select_result = self.session.execute(query).all()
         return select_result
 
-    def select_constituency_data_by_region(
-        self, assembly_term: int, region_name: str
-    ) -> List[any]:
+    def select_constituency_data_by_region(self, assembly_term: int, region_name: str):
         region_id = self.get_region_id(region_name)
         query = (
             select(
