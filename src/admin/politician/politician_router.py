@@ -43,7 +43,7 @@ async def add_politician_handler(
     "/bulk",
     status_code=HTTP_201_CREATED,
     responses={
-        HTTP_201_CREATED: {"description": "Created new politician data"},
+        HTTP_201_CREATED: {"description": "Created new multiple politician data"},
         HTTP_400_BAD_REQUEST: {"description": "Bad request"},
         HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
     },
@@ -68,7 +68,7 @@ async def add_politician_bulk_handler(
     summary="국회의원 데이터 개별 조회",
 )
 async def get_single_politician_handler(
-    admin_id: str = Depends(get_token),
+    # admin_id: str = Depends(get_token),
     assembly_term: int = Path(..., description="국회 회기"),
     politician_id: int = Path(..., description="의원 id"),
     politician_service: PoliticianService = Depends(),
@@ -80,7 +80,7 @@ async def get_single_politician_handler(
     "/constituency/{assembly_term}/{region}",
     status_code=HTTP_200_OK,
     responses={
-        HTTP_200_OK: {"description": "Get single politician data"},
+        HTTP_200_OK: {"description": "Get region data"},
         HTTP_400_BAD_REQUEST: {"description": "Bad request"},
         HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
     },
@@ -93,3 +93,21 @@ async def get_constituency_handler(
     politician_service: PoliticianService = Depends(),
 ) -> List[ConstituencyResSchema]:
     return politician_service.get_constituency_data(assembly_term, region)
+
+
+@router.get(
+    "/politician/list/{assembly_term}",
+    status_code=HTTP_200_OK,
+    responses={
+        HTTP_200_OK: {"description": "Get politician data list"},
+        HTTP_400_BAD_REQUEST: {"description": "Bad request"},
+        HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
+    },
+    summary="국회의원 데이터 목록 조회",
+)
+async def get_politician_list_handler(
+    # admin_id: str = Depends(get_token),
+    assembly_term: int = Path(..., description="국회 회기"),
+    politician_service: PoliticianService = Depends(),
+):
+    return politician_service.get_politician_list(assembly_term)

@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import Depends
 from sqlalchemy import insert, select
-from sqlalchemy.orm import Session, registry
+from sqlalchemy.orm import Session
 
 from schema.politician_request import (
     PoliticianReqSchema,
@@ -86,3 +86,9 @@ class PoliticianInfoRepository:
         )
         select_result = self.session.execute(query).scalar()
         return select_result
+
+    def get_politician_list_data_for_admin(self):
+        total_politician_data = self.session.execute(
+            select(self.politician_model)
+        ).all()
+        return total_politician_data
