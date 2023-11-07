@@ -13,18 +13,13 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
 )
 
-from schema.login_response import (
-    LoginResponse,
-    LoginResponseData,
-)
+from schema.login_response import LoginRes
 from schema.admin_info_response import (
     AdminInfoResponse,
     NicknameUniquenessResponse,
 )
 from schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
-from schema.signup_response import SignUpResponse
 from schema.token_response import (
-    RefreshTokensResponse,
     Tokens,
     TokenDecodeResponse,
 )
@@ -44,7 +39,7 @@ redis_client = redis.Redis(
 )
 
 
-async def create_admin(**kwargs) -> SignUpResponse:
+async def create_admin(**kwargs) -> AdminInfoResponse:
     new_account_data = kwargs["request"]
     auth_manager = kwargs["auth_manager"]
     admin_repository = kwargs["admin_repository"]
@@ -61,10 +56,10 @@ async def create_admin(**kwargs) -> SignUpResponse:
     admin_created: Admin = admin_repository.save_admin_data(new_admin)
     logger.info(f"New admin account is created: {admin_created}")
 
-    return SignUpResponse(data=AdminInfoResponse.model_validate(admin_created))
+    return AdminInfoResponse.model_validate(admin_created)
 
 
-async def admin_login(**kwargs) -> LoginResponse:
+async def admin_login(**kwargs) -> LoginRes:
     login_data = kwargs["request"]
     auth_manager = kwargs["auth_manager"]
     admin_repository = kwargs["admin_repository"]
@@ -98,13 +93,10 @@ async def admin_login(**kwargs) -> LoginResponse:
     logger.info(
         f"Admin login - Email: {admin.email}, Nickname: {admin.nickname}, Time: {datetime.now()}"
     )
-    login_response_data = LoginResponseData(
-        admin=admin, access_token=access_token, refresh_token=refresh_token
-    )
-    return LoginResponse(data=login_response_data)
+    return LoginRes(admin=admin, access_token=access_token, refresh_token=refresh_token)
 
 
-async def refresh_access_token(**kwargs) -> RefreshTokensResponse:
+async def refresh_access_token(**kwargs) -> Tokens:
     admin_id = kwargs["admin_id"]
     refresh_token = kwargs["body"].dict()["refresh_token"]
     auth_manager = kwargs["auth_manager"]
@@ -147,8 +139,7 @@ async def refresh_access_token(**kwargs) -> RefreshTokensResponse:
     logger.info(
         f"Refreshed tokens - Email: {admin.email}, Nickname: {admin.nickname}, Time: {datetime.now()}"
     )
-    token_data = Tokens(access_token=access_token, refresh_token=refresh_token)
-    return RefreshTokensResponse(data=token_data)
+    return Tokens(access_token=access_token, refresh_token=refresh_token)
 
 
 async def send_auth_number_email(**kwargs) -> SendAuthNumResponse:
