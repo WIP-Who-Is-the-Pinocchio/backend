@@ -192,6 +192,43 @@ class PoliticianService:
                 for data in jurisdiction_data
             ]
             politician_res = GetPoliticianElementOfListRes.model_validate(politician[0])
+            politician_res.assembly_term = assembly_term
             politician_res.constituency = constituency_list
             return_res.append(politician_res)
         return return_res
+
+    def get_politician_search_data(
+        self,
+        assembly_term: int,
+        name: str = None,
+        party: str = None,
+        jurisdiction: str = None,
+    ) -> List[GetPoliticianElementOfListRes] | str:
+        if name or party:
+            politician_list = (
+                self.politician_info_repo.get_politician_search_data_for_admin(
+                    name, party
+                )
+            )
+            return_res = []
+            for politician in politician_list:
+                jurisdiction_data = (
+                    self.area_repo.select_jurisdiction_data_by_politician_id(
+                        politician[0].id
+                    )
+                )
+                constituency_list = [
+                    ConstituencyResSchema(
+                        region=data[1], district=data[2], section=data[3]
+                    )
+                    for data in jurisdiction_data
+                ]
+                politician_res = GetPoliticianElementOfListRes.model_validate(
+                    politician[0]
+                )
+                politician_res.assembly_term = assembly_term
+                politician_res.constituency = constituency_list
+                return_res.append(politician_res)
+                return return_res
+        else:
+            return "Only [name] or [party] based search is allowed for now."

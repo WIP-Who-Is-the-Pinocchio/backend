@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, Query
 from starlette.status import (
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
@@ -16,6 +16,7 @@ from schema.politician_response import (
     AddBulkPoliticianDataRes,
     GetSinglePoliticianDataRes,
     ConstituencyResSchema,
+    GetPoliticianElementOfListRes,
 )
 
 router = APIRouter()
@@ -58,7 +59,7 @@ async def add_politician_bulk_handler(
 
 
 @router.get(
-    "/{assembly_term}/{politician_id}",
+    "/single/{assembly_term}/{politician_id}",
     status_code=HTTP_200_OK,
     responses={
         HTTP_200_OK: {"description": "Get single politician data"},
@@ -68,7 +69,7 @@ async def add_politician_bulk_handler(
     summary="국회의원 데이터 개별 조회",
 )
 async def get_single_politician_handler(
-    # admin_id: str = Depends(get_token),
+    admin_id: str = Depends(get_token),
     assembly_term: int = Path(..., description="국회 회기"),
     politician_id: int = Path(..., description="의원 id"),
     politician_service: PoliticianService = Depends(),
@@ -96,7 +97,7 @@ async def get_constituency_handler(
 
 
 @router.get(
-    "/politician/list/{assembly_term}",
+    "/list/{assembly_term}",
     status_code=HTTP_200_OK,
     responses={
         HTTP_200_OK: {"description": "Get politician data list"},
@@ -106,8 +107,31 @@ async def get_constituency_handler(
     summary="국회의원 데이터 목록 조회",
 )
 async def get_politician_list_handler(
-    # admin_id: str = Depends(get_token),
+    admin_id: str = Depends(get_token),
     assembly_term: int = Path(..., description="국회 회기"),
     politician_service: PoliticianService = Depends(),
-):
+) -> List[GetPoliticianElementOfListRes]:
     return politician_service.get_politician_list(assembly_term)
+
+
+@router.get(
+    "/search/{assembly_term}",
+    status_code=HTTP_200_OK,
+    responses={
+        HTTP_200_OK: {"description": "Get politician search data"},
+        HTTP_400_BAD_REQUEST: {"description": "Bad request"},
+        HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
+    },
+    summary="국회의원 데이터 조건별 검색 조회",
+)
+async def get_politician_list_handler(
+    admin_id: str = Depends(get_token),
+    assembly_term: int = Path(..., description="국회 회기"),
+    name: Optional[str] = Query(None, description="의원 이름"),
+    party: Optional[str] = Query(None, description="소속 정당"),
+    jurisdiction: Optional[str] = Query(None, description="관할 지역구"),
+    politician_service: PoliticianService = Depends(),
+) -> List[GetPoliticianElementOfListRes] | str:
+    return politician_service.get_politician_search_data(
+        assembly_term, name=name, party=party, jurisdiction=jurisdiction
+    )
