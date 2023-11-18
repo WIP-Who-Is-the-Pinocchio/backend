@@ -131,7 +131,7 @@ async def get_politician_list_handler(
     party: Optional[str] = Query(None, description="소속 정당"),
     jurisdiction: Optional[str] = Query(None, description="관할 지역구"),
     politician_service: PoliticianService = Depends(),
-) -> List[GetPoliticianElementOfListRes] | str:
+) -> List[GetPoliticianElementOfListRes]:
     return politician_service.get_politician_search_data(
         assembly_term, name=name, party=party, jurisdiction=jurisdiction
     )

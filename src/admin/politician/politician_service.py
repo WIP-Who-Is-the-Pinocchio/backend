@@ -1,4 +1,5 @@
 import logging
+import re
 from itertools import chain
 from typing import List
 
@@ -203,7 +204,7 @@ class PoliticianService:
         name: str = None,
         party: str = None,
         jurisdiction: str = None,
-    ) -> List[GetPoliticianElementOfListRes] | str:
+    ) -> List[GetPoliticianElementOfListRes]:
         if name or party:
             politician_list = (
                 self.politician_info_repo.get_politician_search_data_for_admin(
@@ -231,4 +232,80 @@ class PoliticianService:
                 return_res.append(politician_res)
                 return return_res
         else:
-            return "Only [name] or [party] based search is allowed for now."
+            area_text = jurisdiction.replace(" ", "")
+            abbreviated_area_text = re.sub(r"(특별|광역)시", "", area_text)
+            region_searched_keyword_replacements = {
+                "서울시": "서울",
+                "부산시": "부선",
+                "인천시": "인천",
+                "대구시": "대구",
+                "광주시": "광주",
+                "대전시": "대전",
+                "울산시": "울산",
+                "경기도": "경기",
+                "세종시": "세종",
+                "제주도": "제주",
+            }
+            for key, value in region_searched_keyword_replacements.items():
+                abbreviated_area_text = abbreviated_area_text.replace(key, value)
+
+            region_data = self.area_repo.get_region_data_by_random_text(
+                abbreviated_area_text
+            )
+
+            if not region_data:
+                logger.info(f"Only constituency searched: {abbreviated_area_text}")
+                jurisdiction_data_list = (
+                    self.area_repo.select_jurisdiction_data_by_random_text(
+                        assembly_term, abbreviated_area_text
+                    )
+                )
+            else:
+                region_id, region_name = region_data
+                area_text_without_region = abbreviated_area_text.replace(
+                    region_name, ""
+                )
+                if not area_text_without_region:
+                    logger.info(f"Only region searched: {abbreviated_area_text}")
+                    jurisdiction_data_list = (
+                        self.area_repo.select_jurisdiction_data_by_region_id_and_text(
+                            assembly_term, region_id
+                        )
+                    )
+                else:
+                    logger.info(
+                        f"Both region and constituency searched: {abbreviated_area_text}"
+                    )
+                    jurisdiction_data_list = (
+                        self.area_repo.select_jurisdiction_data_by_region_id_and_text(
+                            assembly_term, region_id, area_text_without_region
+                        )
+                    )
+
+            return_res = []
+            for data in jurisdiction_data_list:
+                constituency_data = ConstituencyResSchema(
+                    region=data[1], district=data[2], section=data[3]
+                )
+                return_res_politician = next(
+                    (
+                        return_res_el
+                        for return_res_el in return_res
+                        if return_res_el.id == data[0]
+                    ),
+                    None,
+                )
+
+                if return_res_politician:
+                    return_res_politician.constituency.append(constituency_data)
+                else:
+                    politician_data = (
+                        self.politician_info_repo.select_politician_data_by_id(data[0])
+                    )
+                    politician_res = GetPoliticianElementOfListRes.model_validate(
+                        politician_data
+                    )
+                    politician_res.assembly_term = assembly_term
+                    politician_res.constituency = [constituency_data]
+                    return_res.append(politician_res)
+            return return_res
