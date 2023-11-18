@@ -30,6 +30,14 @@ class AreaRepository:
             None,
         )
 
+    @staticmethod
+    def get_region_data_by_random_text(area_text: str) -> (int, str) or None:
+        region_data = next(
+            (region.value for region in RegionType if region.value[1] in area_text),
+            None,
+        )
+        return region_data if region_data else None
+
     def get_constituency_id(self, data: ConstituencyReqSchema) -> int:
         region, district, section = data
         region_name = region[1]
@@ -108,5 +116,63 @@ class AreaRepository:
                 self.region_model.id == self.constituency_model.region_id,
             )
         )
+        select_result = self.session.execute(query).all()
+        return select_result
+
+    def select_jurisdiction_data_by_random_text(
+        self, assembly_term: int, random_text: str
+    ):
+        query = (
+            select(
+                self.jurisdiction_model.politician_id,
+                self.region_model.region,
+                self.constituency_model.district,
+                self.constituency_model.section,
+            )
+            .select_from(self.jurisdiction_model)
+            .filter(
+                self.constituency_model.assembly_term == assembly_term,
+                self.constituency_model.district.like(f"%{random_text}%"),
+            )
+            .join(
+                self.constituency_model,
+                self.constituency_model.id == self.jurisdiction_model.constituency_id,
+            )
+            .join(
+                self.region_model,
+                self.region_model.id == self.constituency_model.region_id,
+            )
+        )
+        search_result = self.session.execute(query).all()
+        return search_result
+
+    def select_jurisdiction_data_by_region_id_and_text(
+        self, assembly_term: int, region_id: int, constituency_text: str = None
+    ):
+        query = (
+            select(
+                self.jurisdiction_model.politician_id,
+                self.region_model.region,
+                self.constituency_model.district,
+                self.constituency_model.section,
+            )
+            .select_from(self.jurisdiction_model)
+            .filter(
+                self.constituency_model.region_id == region_id,
+                self.constituency_model.assembly_term == assembly_term,
+            )
+            .join(
+                self.constituency_model,
+                self.constituency_model.id == self.jurisdiction_model.constituency_id,
+            )
+            .join(
+                self.region_model,
+                self.region_model.id == self.constituency_model.region_id,
+            )
+        )
+        if constituency_text:
+            query = query.filter(
+                self.constituency_model.district.like(f"%{constituency_text}%")
+            )
         select_result = self.session.execute(query).all()
         return select_result
