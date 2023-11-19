@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, func
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
@@ -120,19 +120,18 @@ class AreaRepository:
         return select_result
 
     def select_jurisdiction_data_by_random_text(
-        self, assembly_term: int, random_text: str
+        self, assembly_term: int, random_text: str, offset: int, size: int
     ):
-        query = (
+        distinct_subquery = (
             select(
-                self.jurisdiction_model.politician_id,
-                self.region_model.region,
-                self.constituency_model.district,
-                self.constituency_model.section,
+                func.distinct(self.jurisdiction_model.politician_id).label(
+                    "politician_id"
+                )
             )
             .select_from(self.jurisdiction_model)
             .filter(
-                self.constituency_model.assembly_term == assembly_term,
                 self.constituency_model.district.like(f"%{random_text}%"),
+                self.constituency_model.assembly_term == assembly_term,
             )
             .join(
                 self.constituency_model,
@@ -142,19 +141,35 @@ class AreaRepository:
                 self.region_model,
                 self.region_model.id == self.constituency_model.region_id,
             )
+        ).alias("distinct_subquery")
+
+        numbered_query = (
+            select(
+                distinct_subquery.c.politician_id,
+                func.row_number().over().label("row_num"),
+            )
+            .select_from(distinct_subquery)
+            .alias("numbered_query")
         )
-        search_result = self.session.execute(query).all()
+
+        final_query = select(numbered_query.c.politician_id).offset(offset).limit(size)
+        search_result = self.session.execute(final_query).all()
+        print(search_result)
         return search_result
 
     def select_jurisdiction_data_by_region_id_and_text(
-        self, assembly_term: int, region_id: int, constituency_text: str = None
+        self,
+        offset: int,
+        size: int,
+        assembly_term: int,
+        region_id: int,
+        constituency_text: str = None,
     ):
-        query = (
+        distinct_subquery = (
             select(
-                self.jurisdiction_model.politician_id,
-                self.region_model.region,
-                self.constituency_model.district,
-                self.constituency_model.section,
+                func.distinct(self.jurisdiction_model.politician_id).label(
+                    "politician_id"
+                )
             )
             .select_from(self.jurisdiction_model)
             .filter(
@@ -171,8 +186,21 @@ class AreaRepository:
             )
         )
         if constituency_text:
-            query = query.filter(
+            distinct_subquery = distinct_subquery.filter(
                 self.constituency_model.district.like(f"%{constituency_text}%")
             )
-        select_result = self.session.execute(query).all()
+        distinct_subquery = distinct_subquery.alias("distinct_subquery")
+
+        numbered_query = (
+            select(
+                distinct_subquery.c.politician_id,
+                func.row_number().over().label("row_num"),
+            )
+            .select_from(distinct_subquery)
+            .alias("numbered_query")
+        )
+
+        final_query = select(numbered_query.c.politician_id).offset(offset).limit(size)
+
+        select_result = self.session.execute(final_query).all()
         return select_result
