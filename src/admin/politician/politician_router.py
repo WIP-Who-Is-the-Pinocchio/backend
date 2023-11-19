@@ -109,9 +109,11 @@ async def get_constituency_handler(
 async def get_politician_list_handler(
     admin_id: str = Depends(get_token),
     assembly_term: int = Path(..., description="국회 회기"),
+    page: int = Query(..., description="페이지네이션 0부터 시작"),
+    size: int = Query(default=10),
     politician_service: PoliticianService = Depends(),
 ) -> List[GetPoliticianElementOfListRes]:
-    return politician_service.get_politician_list(assembly_term)
+    return politician_service.get_politician_list(assembly_term, page, size)
 
 
 @router.get(
@@ -130,8 +132,15 @@ async def get_politician_list_handler(
     name: Optional[str] = Query(None, description="의원 이름"),
     party: Optional[str] = Query(None, description="소속 정당"),
     jurisdiction: Optional[str] = Query(None, description="관할 지역구"),
+    page: int = Query(..., description="페이지네이션 0부터 시작"),
+    size: int = Query(default=10),
     politician_service: PoliticianService = Depends(),
 ) -> List[GetPoliticianElementOfListRes]:
     return politician_service.get_politician_search_data(
-        assembly_term, name=name, party=party, jurisdiction=jurisdiction
+        assembly_term=assembly_term,
+        name=name,
+        party=party,
+        jurisdiction=jurisdiction,
+        page=page,
+        size=size,
     )
