@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Path, Query, Body
+from starlette.background import BackgroundTasks
 from starlette.status import (
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
@@ -102,6 +103,7 @@ async def refresh_handler(
     summary="인증번호 이메일 발송",
 )
 async def send_signup_email_handler(
+    background_tasks: BackgroundTasks,
     email: str = Path(..., description="가입 대기 이메일"),
     smtp_manager: SmtpManager = Depends(),
     admin_repository: AdminRepository = Depends(),
