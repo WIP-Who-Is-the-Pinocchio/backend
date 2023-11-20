@@ -1,6 +1,6 @@
 import logging
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import redis
@@ -37,6 +37,9 @@ redis_client = redis.Redis(
     encoding="UTF-8",
     decode_responses=True,
 )
+
+
+AUTH_NUM_MEMORY = {}
 
 
 async def create_admin(**kwargs) -> AdminInfoResponse:
@@ -146,6 +149,7 @@ async def send_auth_number_email(**kwargs) -> SendAuthNumResponse:
     email = kwargs["email"]
     smtp_manager = kwargs["smtp_manager"]
     admin_repository = kwargs["admin_repository"]
+    background_tasks = kwargs["background_tasks"]
 
     search_result = admin_repository.get_admin_data(email=email)
     if search_result:
@@ -155,12 +159,15 @@ async def send_auth_number_email(**kwargs) -> SendAuthNumResponse:
         )
 
     auth_number = random.randint(111111, 999999)
-    smtp_manager.send_auth_num(email, auth_number)
+    background_tasks.add_task(smtp_manager.send_auth_num, email, auth_number)
+    auth_otp_info = {"number": auth_number, "created_at": datetime.now()}
 
-    auth_number_data = get_auth_number(email)
+    # auth_number_data = get_auth_number(email)
+    auth_number_data = AUTH_NUM_MEMORY.get(email)
     if auth_number_data is not None:
-        delete_auth_number(email)
-    add_auth_number(email, auth_number)
+        del AUTH_NUM_MEMORY[email]
+    # add_auth_number(email, auth_number)
+    AUTH_NUM_MEMORY[email] = auth_otp_info
 
     return SendAuthNumResponse(email=email)
 
@@ -199,19 +206,27 @@ async def verify_email_auth_number(**kwargs) -> VerifyAuthNumResponse:
     email = kwargs["email"]
     auth_number = kwargs["auth_number"]
 
-    auth_number_data = int(get_auth_number(email))
-    if auth_number_data is None:
+    # auth_number_data = int(get_auth_number(email))
+    auth_otp_info = AUTH_NUM_MEMORY.get(email)
+    if not auth_otp_info:
         logger.info(f"{email} auth number not found.")
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail=f"No auth data with {email}"
         )
-    elif auth_number != auth_number_data:
+    elif auth_otp_info["created_at"] < datetime.now() - timedelta(minutes=3):
+        logger.info(f"{email} auth number not found.")
+        del AUTH_NUM_MEMORY[email]
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND, detail=f"No auth data with {email}"
+        )
+    elif auth_number != auth_otp_info["number"]:
         logger.info(f"{email} auth number unmatched.")
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST, detail=f"Wrong auth number"
         )
 
-    delete_auth_number(email)
+    # delete_auth_number(email)
+    del AUTH_NUM_MEMORY[email]
     return VerifyAuthNumResponse()
 
 
