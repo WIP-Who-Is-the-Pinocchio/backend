@@ -10,12 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     Boolean,
 )
-from sqlalchemy.orm import (
-    declarative_base,
-    relationship,
-    Mapped,
-    mapped_column,
-가)
+from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
 Base = declarative_base()
 
