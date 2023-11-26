@@ -158,7 +158,6 @@ class AreaRepository:
 
         final_query = select(numbered_query.c.politician_id).offset(offset).limit(size)
         search_result = self.session.execute(final_query).all()
-        print(search_result)
         return search_result
 
     def select_jurisdiction_data_by_region_id_and_text(
