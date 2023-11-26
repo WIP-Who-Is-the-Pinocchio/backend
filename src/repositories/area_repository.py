@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Union
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import select, insert, func
+from sqlalchemy import select, insert, func, delete
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
-from schema.politician_request import ConstituencyReqSchema
+from schema.politician_request import ConstituencyReqSchema, JurisdictionUpdateReqSchema
 from common.enums import RegionType
 from database.connection import get_db
 from database.models import Region, Constituency, Jurisdiction
@@ -38,8 +38,10 @@ class AreaRepository:
         )
         return region_data if region_data else None
 
-    def get_constituency_id(self, data: ConstituencyReqSchema) -> int:
-        region, district, section = data
+    def get_constituency_id(
+        self, data: Union[ConstituencyReqSchema or JurisdictionUpdateReqSchema]
+    ) -> int:
+        id, region, district, section = data
         region_name = region[1]
         district_name = district[1]
         section_name = section[1]
@@ -79,10 +81,12 @@ class AreaRepository:
     def select_jurisdiction_data_by_politician_id(self, politician_id: int):
         query = (
             select(
+                self.jurisdiction_model.id,
                 self.constituency_model.assembly_term,
                 self.region_model.region,
                 self.constituency_model.district,
                 self.constituency_model.section,
+                self.jurisdiction_model.constituency_id,
             )
             .select_from(self.constituency_model)
             .filter(self.jurisdiction_model.politician_id == politician_id)
@@ -204,3 +208,18 @@ class AreaRepository:
 
         select_result = self.session.execute(final_query).all()
         return select_result
+
+    def check_jurisdiction_match(
+        self, politician_id: int, constituency_id: int
+    ) -> bool:
+        query = select(self.jurisdiction_model).filter_by(
+            politician_id=politician_id, constituency_id=constituency_id
+        )
+        search_result = self.session.execute(query).scalar()
+        return True if search_result else False
+
+    def delete_jurisdiction_data(self, jurisdiction_id: int):
+        query = delete(self.jurisdiction_model).where(
+            self.jurisdiction_model.id == jurisdiction_id
+        )
+        self.session.execute(query)

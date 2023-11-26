@@ -57,3 +57,25 @@ class SinglePoliticianRequest(BaseModel):
     promise_count_detail: PromiseCountDetailReqSchema
     constituency: List[ConstituencyReqSchema]
     committee: List[PoliticianCommitteeReqSchema]
+
+
+class PoliticianCommitteeUpdateReqSchema(BaseModel):
+    id: Optional[int] = None
+    is_main: bool
+    name: str
+
+
+class JurisdictionUpdateReqSchema(BaseModel):
+    id: Optional[int] = None
+    region: str
+    district: Optional[str] = None
+    section: Optional[str] = None
+
+
+class SinglePoliticianUpdateRequest(BaseModel):
+    politician_id: int
+    assembly_term: int
+    base_info: PoliticianReqSchema
+    promise_count_detail: PromiseCountDetailReqSchema
+    jurisdiction: List[JurisdictionUpdateReqSchema]
+    committee: List[PoliticianCommitteeUpdateReqSchema]
