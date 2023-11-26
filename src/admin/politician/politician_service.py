@@ -382,7 +382,7 @@ class PoliticianService:
                 )
                 jurisdiction_list = [
                     JurisdictionResSchema(
-                        id=data[0], region=data[1], district=data[2], section=data[3]
+                        id=data[0], region=data[2], district=data[3], section=data[4]
                     )
                     for data in jurisdiction_data
                 ]

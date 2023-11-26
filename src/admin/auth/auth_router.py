@@ -11,7 +11,6 @@ from starlette.status import (
 )
 
 from admin.auth.smtp_manager import SmtpManager
-from admin.security import get_token
 from schema.admin_info_response import NicknameUniquenessResponse, AdminInfoResponse
 from schema.login_request import LogInRequest
 from schema.login_response import LoginRes, LogoutRes
@@ -81,7 +80,7 @@ async def admin_login_handler(
     summary="관리자 로그아웃",
 )
 async def admin_logout_handler(
-    admin_id: str = Depends(get_token),
+    admin_id: int = Query(..., description="관리자 id"),
     admin_repository: AdminRepository = Depends(),
 ) -> LogoutRes:
     return await admin_logout(int(admin_id), admin_repository)
