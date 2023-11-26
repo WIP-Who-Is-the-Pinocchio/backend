@@ -10,13 +10,16 @@ from starlette.status import (
 
 from admin.politician.politician_service import PoliticianService
 from admin.security import get_token
-from schema.politician_request import SinglePoliticianRequest
+from schema.politician_request import (
+    SinglePoliticianRequest,
+    SinglePoliticianUpdateRequest,
+)
 from schema.politician_response import (
     AddPoliticianDataRes,
     AddBulkPoliticianDataRes,
     GetSinglePoliticianDataRes,
-    ConstituencyResSchema,
     GetPoliticianElementOfListRes,
+    ConstituencyResSchema,
 )
 
 router = APIRouter()
@@ -56,6 +59,25 @@ async def add_politician_bulk_handler(
     politician_service: PoliticianService = Depends(),
 ) -> AddBulkPoliticianDataRes:
     return await politician_service.create_bulk_politician_data(**locals())
+
+
+@router.put(
+    "",
+    status_code=HTTP_200_OK,
+    responses={
+        HTTP_200_OK: {"description": "Updated politician data"},
+        HTTP_400_BAD_REQUEST: {"description": "Bad request"},
+        HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
+    },
+    summary="국회의원 데이터 개별 수정",
+    description="개별 데이터 추가 요청 시 body에서 politician_id 추가",
+)
+async def update_single_politician_handler(
+    request: SinglePoliticianUpdateRequest,
+    admin_id: str = Depends(get_token),
+    politician_service: PoliticianService = Depends(),
+) -> AddPoliticianDataRes:
+    return await politician_service.update_single_politician_data(**locals())
 
 
 @router.get(
