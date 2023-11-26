@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Path, HTTPException
 from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
 from admin.auth.auth_manager import AuthManager
-from admin.security import get_token
+from admin.security import get_auth_info_from_token
 from database.models import Admin
 from repositories.admin_repository import AdminRepository
 
@@ -22,7 +22,7 @@ router = APIRouter()
 )
 async def access_token_check_dev_handler(
     admin_id: int = Path(..., description="admin_id"),
-    token: str = Depends(get_token),
+    token: str = Depends(get_auth_info_from_token),
     auth_manager: AuthManager = Depends(),
     admin_repository: AdminRepository = Depends(),
 ):
