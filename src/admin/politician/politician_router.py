@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Path, Query, HTTPException
+from fastapi import APIRouter, Depends, Path, Query
 from starlette.status import (
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
