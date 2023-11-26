@@ -16,8 +16,9 @@ from schema.politician_response import (
     AddPoliticianDataRes,
     AddBulkPoliticianDataRes,
     GetSinglePoliticianDataRes,
-    ConstituencyResSchema,
+    JurisdictionResSchema,
     GetPoliticianElementOfListRes,
+    ConstituencyResSchema,
 )
 
 logger = logging.getLogger("uvicorn")
@@ -145,6 +146,76 @@ class PoliticianService:
         logger.info(f"admin {admin_id} inserted {data_count} politician data")
         return AddBulkPoliticianDataRes(new_politician_data_count=data_count)
 
+    async def update_single_politician_data(self, **kwargs) -> AddPoliticianDataRes:
+        admin_id = kwargs["admin_id"]
+        politician_data = kwargs["request"]
+        politician_id = politician_data.politician_id
+
+        try:
+            self.politician_info_repo.update_politician_data(
+                politician_id, politician_data.base_info
+            )
+
+            self.politician_info_repo.update_promise_count_detail_data(
+                politician_id, politician_data.promise_count_detail
+            )
+
+            original_committee_data = self.politician_info_repo.select_committee_data(
+                politician_id
+            )
+            original_committee_id_list = list(
+                map(lambda x: x[0], original_committee_data)
+            )
+            new_committee_id_list = list(
+                map(lambda x: x.model_dump()["id"], politician_data.committee)
+            )
+            deleted_committee_id_list = list(
+                set(original_committee_id_list).difference(new_committee_id_list)
+            )
+            for committee_id in deleted_committee_id_list:
+                self.politician_info_repo.delete_committee_data(committee_id)
+            self.politician_info_repo.update_committee_data(
+                politician_id, politician_data.committee
+            )
+
+            original_jurisdiction_data = (
+                self.area_repo.select_jurisdiction_data_by_politician_id(politician_id)
+            )
+            original_jurisdiction_id_list = list(
+                map(lambda x: x[0], original_jurisdiction_data)
+            )
+            original_constituency_id_list = list(
+                map(lambda x: x[5], original_jurisdiction_data)
+            )
+            new_jurisdiction_id_list = list(
+                map(lambda x: x.model_dump()["id"], politician_data.jurisdiction)
+            )
+            deleted_jurisdiction_id_list = list(
+                set(original_jurisdiction_id_list).difference(new_jurisdiction_id_list)
+            )
+            for jurisdiction_id in deleted_jurisdiction_id_list:
+                self.area_repo.delete_jurisdiction_data(jurisdiction_id)
+
+            for constituency_data in politician_data.jurisdiction:
+                constituency_id = self.area_repo.get_constituency_id(constituency_data)
+                if constituency_id not in original_constituency_id_list:
+                    self.area_repo.insert_jurisdiction_data(
+                        politician_id, constituency_id
+                    )
+
+            self.session.commit()
+        except DatabaseError as e:
+            self.session.rollback()
+            logger.exception(str(e))
+            raise HTTPException(
+                status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            )
+        finally:
+            self.session.close()
+
+        logger.info(f"admin {admin_id} updated politician data: {politician_id}")
+        return AddPoliticianDataRes(politician_id=politician_id)
+
     def get_politician_by_id(
         self, assembly_term: int, politician_id: int
     ) -> GetSinglePoliticianDataRes:
@@ -154,14 +225,16 @@ class PoliticianService:
         jurisdiction_data = self.area_repo.select_jurisdiction_data_by_politician_id(
             politician_id
         )
-        constituency_list = [
-            ConstituencyResSchema(region=data[1], district=data[2], section=data[3])
+        jurisdiction_list = [
+            JurisdictionResSchema(
+                id=data[0], region=data[2], district=data[3], section=data[4]
+            )
             for data in jurisdiction_data
         ]
 
         return_res = GetSinglePoliticianDataRes.model_validate(politician_data)
         return_res.assembly_term = assembly_term
-        return_res.constituency = constituency_list
+        return_res.constituency = jurisdiction_list
         return return_res
 
     def get_constituency_data(
@@ -191,13 +264,15 @@ class PoliticianService:
                     politician[0].id
                 )
             )
-            constituency_list = [
-                ConstituencyResSchema(region=data[1], district=data[2], section=data[3])
+            jurisdiction_list = [
+                JurisdictionResSchema(
+                    id=data[0], region=data[2], district=data[3], section=data[4]
+                )
                 for data in jurisdiction_data
             ]
             politician_res = GetPoliticianElementOfListRes.model_validate(politician[0])
             politician_res.assembly_term = assembly_term
-            politician_res.constituency = constituency_list
+            politician_res.constituency = jurisdiction_list
             return_res.append(politician_res)
         return return_res
 
@@ -224,9 +299,9 @@ class PoliticianService:
                         politician[0].id
                     )
                 )
-                constituency_list = [
-                    ConstituencyResSchema(
-                        region=data[1], district=data[2], section=data[3]
+                jurisdiction_list = [
+                    JurisdictionResSchema(
+                        id=data[0], region=data[2], district=data[3], section=data[4]
                     )
                     for data in jurisdiction_data
                 ]
@@ -234,7 +309,7 @@ class PoliticianService:
                     politician[0]
                 )
                 politician_res.assembly_term = assembly_term
-                politician_res.constituency = constituency_list
+                politician_res.constituency = jurisdiction_list
                 return_res.append(politician_res)
                 return return_res
         else:
@@ -305,9 +380,9 @@ class PoliticianService:
                         politician_id
                     )
                 )
-                constituency_list = [
-                    ConstituencyResSchema(
-                        region=data[1], district=data[2], section=data[3]
+                jurisdiction_list = [
+                    JurisdictionResSchema(
+                        id=data[0], region=data[1], district=data[2], section=data[3]
                     )
                     for data in jurisdiction_data
                 ]
@@ -315,6 +390,6 @@ class PoliticianService:
                     politician_data
                 )
                 politician_res.assembly_term = assembly_term
-                politician_res.constituency = constituency_list
+                politician_res.constituency = jurisdiction_list
                 return_res.append(politician_res)
             return return_res
