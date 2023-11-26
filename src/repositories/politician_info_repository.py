@@ -2,13 +2,14 @@ import logging
 from typing import List
 
 from fastapi import Depends
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update, CursorResult, delete
 from sqlalchemy.orm import Session
 
 from schema.politician_request import (
     PoliticianReqSchema,
     PromiseCountDetailReqSchema,
     PoliticianCommitteeReqSchema,
+    PoliticianCommitteeUpdateReqSchema,
 )
 from database.connection import get_db
 from database.models import Politician, PromiseCountDetail, Committee
@@ -42,10 +43,11 @@ class PoliticianInfoRepository:
     ):
         bulk_data = []
         for committee in committee_list:
-            data = dict()
-            data["politician_id"] = politician_id
-            data["is_main"] = committee.is_main
-            data["name"] = committee.name
+            data = {
+                "politician_id": politician_id,
+                "is_main": committee.is_main,
+                "name": committee.name,
+            }
             bulk_data.append(data)
         query = insert(self.committee_model).values(bulk_data)
         self.session.execute(query)
@@ -75,7 +77,7 @@ class PoliticianInfoRepository:
             )
             .select_from(self.politician_model)
             .filter_by(id=politician_id)
-            .join(
+            .outerjoin(
                 self.committee_model,
                 self.committee_model.politician_id == politician_id,
             )
@@ -106,3 +108,66 @@ class PoliticianInfoRepository:
             filtered_query.offset(offset).limit(size)
         ).all()
         return search_result
+
+    def select_committee_data(self, politician_id: int):
+        query = select(
+            self.committee_model.id,
+            self.committee_model.is_main,
+            self.committee_model.name,
+        ).filter_by(politician_id=politician_id)
+        search_result = self.session.execute(query).all()
+        return search_result
+
+    def update_politician_data(
+        self, politician_id: int, data: PoliticianReqSchema
+    ) -> CursorResult[int]:
+        query = (
+            update(self.politician_model)
+            .where(self.politician_model.id == politician_id)
+            .values(data.model_dump())
+        )
+        update_result = self.session.execute(query)
+        return update_result
+
+    def delete_committee_data(self, committee_id: int):
+        query = delete(self.committee_model).where(
+            self.committee_model.id == committee_id
+        )
+        self.session.execute(query)
+
+    def update_committee_data(
+        self,
+        politician_id: int,
+        committee_list: List[PoliticianCommitteeUpdateReqSchema],
+    ):
+        for committee in committee_list:
+            committee = committee.model_dump()
+            if committee["id"]:
+                committee_id = committee["id"]
+                del committee["id"]
+                query = (
+                    update(self.committee_model)
+                    .where(self.committee_model.id == committee_id)
+                    .values(committee)
+                )
+                self.session.execute(query)
+            else:
+                new_committee_data = {
+                    "politician_id": politician_id,
+                    "is_main": committee["is_main"],
+                    "name": committee["name"],
+                }
+                query = insert(self.committee_model).values(new_committee_data)
+                self.session.execute(query)
+
+    def update_promise_count_detail_data(
+        self, politician_id: int, data: PromiseCountDetailReqSchema
+    ) -> CursorResult[int]:
+        data = data.model_dump()
+        query = (
+            update(self.promise_count_detail_model)
+            .where(self.politician_model.id == politician_id)
+            .values(**data)
+        )
+        update_result = self.session.execute(query)
+        return update_result
