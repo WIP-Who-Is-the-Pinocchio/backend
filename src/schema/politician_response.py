@@ -34,6 +34,7 @@ class PromiseCountDetailResSchema(BaseModel):
 
 
 class PoliticianCommitteeResSchema(BaseModel):
+    id: int
     is_main: bool
     name: str
 
@@ -42,6 +43,16 @@ class PoliticianCommitteeResSchema(BaseModel):
 
 
 class ConstituencyResSchema(BaseModel):
+    region: str
+    district: Optional[str] = None
+    section: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class JurisdictionResSchema(BaseModel):
+    id: int
     region: str
     district: Optional[str] = None
     section: Optional[str] = None
@@ -76,14 +87,14 @@ class PoliticianResSchema(BaseModel):
 class GetSinglePoliticianDataRes(PoliticianResSchema):
     promise_count_detail: PromiseCountDetailResSchema
     committee: List[PoliticianCommitteeResSchema]
-    constituency: Optional[List[ConstituencyResSchema]] = None
+    constituency: Optional[List[JurisdictionResSchema]] = None
 
     class Config:
         from_attributes = True
 
 
 class GetPoliticianElementOfListRes(PoliticianResSchema):
-    constituency: Optional[List[ConstituencyResSchema]] = None
+    constituency: Optional[List[JurisdictionResSchema]] = None
 
     class Config:
         from_attributes = True
