@@ -7,3 +7,7 @@ class LoginRes(BaseModel):
     admin: AdminInfoResponse
     access_token: str
     refresh_token: str
+
+
+class LogoutRes(BaseModel):
+    detail: str = "Logout success"
