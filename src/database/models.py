@@ -10,13 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     Boolean,
 )
-from sqlalchemy.orm import (
-    declarative_base,
-    relationship,
-    Mapped,
-    mapped_column,
-    MappedAsDataclass,
-)
+from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
 Base = declarative_base()
 
@@ -50,6 +44,11 @@ class Admin(Base, DateTimeMixin):
     def update_token(self, hashed_refresh_token: str, uuid_jti: str):
         self.hashed_refresh_token = hashed_refresh_token
         self.uuid_jti = uuid_jti
+        return self
+
+    def delete_token_jti_data(self):
+        self.hashed_refresh_token = None
+        self.uuid_jti = None
         return self
 
 
