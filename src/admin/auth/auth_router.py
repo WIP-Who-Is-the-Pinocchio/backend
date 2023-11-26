@@ -11,9 +11,10 @@ from starlette.status import (
 )
 
 from admin.auth.smtp_manager import SmtpManager
+from admin.security import get_token
 from schema.admin_info_response import NicknameUniquenessResponse, AdminInfoResponse
 from schema.login_request import LogInRequest
-from schema.login_response import LoginRes
+from schema.login_response import LoginRes, LogoutRes
 from schema.auth_num_response import SendAuthNumResponse, VerifyAuthNumResponse
 from schema.token_response import RefreshTokensRequest, Tokens
 from repositories.admin_repository import AdminRepository
@@ -25,6 +26,7 @@ from admin.auth.auth_service import (
     send_auth_number_email,
     verify_email_auth_number,
     check_nickname_uniqueness,
+    admin_logout,
 )
 from schema.signup_request import SignUpRequest
 
@@ -66,6 +68,23 @@ async def admin_login_handler(
     smtp_manager: SmtpManager = Depends(),
 ) -> LoginRes:
     return await admin_login(**locals())
+
+
+@router.post(
+    "/logout",
+    status_code=HTTP_200_OK,
+    responses={
+        HTTP_200_OK: {"description": "Logout success"},
+        HTTP_401_UNAUTHORIZED: {"description": "Wrong password"},
+        HTTP_404_NOT_FOUND: {"description": "Email not found"},
+    },
+    summary="관리자 로그아웃",
+)
+async def admin_logout_handler(
+    admin_id: str = Depends(get_token),
+    admin_repository: AdminRepository = Depends(),
+) -> LogoutRes:
+    return await admin_logout(int(admin_id), admin_repository)
 
 
 @router.post(

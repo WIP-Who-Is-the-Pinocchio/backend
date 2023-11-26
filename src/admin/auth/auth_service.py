@@ -13,7 +13,8 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
 )
 
-from schema.login_response import LoginRes
+from repositories.admin_repository import AdminRepository
+from schema.login_response import LoginRes, LogoutRes
 from schema.admin_info_response import (
     AdminInfoResponse,
     NicknameUniquenessResponse,
@@ -97,6 +98,16 @@ async def admin_login(**kwargs) -> LoginRes:
         f"Admin login - Email: {admin.email}, Nickname: {admin.nickname}, Time: {datetime.now()}"
     )
     return LoginRes(admin=admin, access_token=access_token, refresh_token=refresh_token)
+
+
+async def admin_logout(admin_id: int, admin_repository: AdminRepository) -> LogoutRes:
+    admin: Admin | None = admin_repository.get_admin_data(id=admin_id)
+    admin.delete_token_jti_data()
+    admin_repository.save_admin_data(admin)
+    logger.info(
+        f"Admin logout - Email: {admin.email}, Nickname: {admin.nickname}, Time: {datetime.now()}"
+    )
+    return LogoutRes()
 
 
 async def refresh_access_token(**kwargs) -> Tokens:
