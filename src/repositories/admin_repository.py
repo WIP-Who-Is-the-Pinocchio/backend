@@ -48,3 +48,7 @@ class AdminRepository:
         select_query = select(Admin).where(getattr(Admin, field) == value)
         search_result = self.session.scalar(select_query)
         return search_result
+
+    def check_jti_data(self, admin_id: int, uuid_jti: str) -> bool:
+        admin_data = self.get_admin_data(id=admin_id)
+        return True if admin_data.uuid_jti == uuid_jti else False
