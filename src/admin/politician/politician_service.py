@@ -10,6 +10,7 @@ from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 from common.enums import RegionType
 from database.connection import get_db
+from repositories.admin_repository import AdminRepository
 from repositories.area_repository import AreaRepository
 from repositories.politician_info_repository import PoliticianInfoRepository
 from schema.politician_response import (
@@ -29,6 +30,7 @@ class PoliticianService:
         self.session = session
         self.politician_info_repo = PoliticianInfoRepository(session)
         self.area_repo = AreaRepository(session)
+        self.admin_repo = AdminRepository(session)
 
     async def create_new_politician_data(self, **kwargs) -> AddPoliticianDataRes:
         admin_id = kwargs["admin_id"]
@@ -38,18 +40,20 @@ class PoliticianService:
             new_politician_id: int = self.politician_info_repo.insert_politician_data(
                 new_politician_data.base_info
             )
-            self.politician_info_repo.insert_committee_data(
-                new_politician_id, new_politician_data.committee
-            )
             self.politician_info_repo.insert_promise_count_detail_data(
                 new_politician_id, new_politician_data.promise_count_detail
             )
+            if new_politician_data.committee:
+                self.politician_info_repo.insert_committee_data(
+                    new_politician_id, new_politician_data.committee
+                )
             for constituency_data in new_politician_data.constituency:
                 constituency_id = self.area_repo.get_constituency_id(constituency_data)
                 self.area_repo.insert_jurisdiction_data(
                     new_politician_id, constituency_id
                 )
 
+            self.admin_repo.insert_admin_log_data(admin_id, "create", new_politician_id)
             self.session.commit()
         except DatabaseError as e:
             self.session.rollback()
@@ -132,6 +136,7 @@ class PoliticianService:
             )
             self.area_repo.bulk_insert_jurisdiction_data(jurisdiction_data_list)
 
+            self.admin_repo.insert_admin_log_data(admin_id, "bulk_create")
             self.session.commit()
         except DatabaseError as e:
             self.session.rollback()
@@ -203,6 +208,7 @@ class PoliticianService:
                         politician_id, constituency_id
                     )
 
+            self.admin_repo.insert_admin_log_data(admin_id, "update", politician_id)
             self.session.commit()
         except DatabaseError as e:
             self.session.rollback()
@@ -219,7 +225,7 @@ class PoliticianService:
     def get_politician_by_id(
         self, assembly_term: int, politician_id: int
     ) -> GetSinglePoliticianDataRes:
-        politician_data = self.politician_info_repo.select_politician_data_by_id(
+        politician_data = self.politician_info_repo.select_total_politician_data_by_id(
             politician_id
         )
         jurisdiction_data = self.area_repo.select_jurisdiction_data_by_politician_id(
@@ -371,7 +377,7 @@ class PoliticianService:
             for politician in jurisdiction_politician_id_list:
                 politician_id = politician[0]
                 politician_data = (
-                    self.politician_info_repo.select_politician_data_by_id(
+                    self.politician_info_repo.select_total_politician_data_by_id(
                         politician_id
                     )
                 )
