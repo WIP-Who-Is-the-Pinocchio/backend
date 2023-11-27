@@ -32,6 +32,8 @@ class Admin(Base, DateTimeMixin):
     hashed_refresh_token = Column(String(256), nullable=True)
     uuid_jti = Column(String(256), nullable=True)
 
+    admin_log: Mapped[List["AdminLog"]] = relationship(back_populates="admin")
+
     def __repr__(self):
         return f"Admin(id={self.id}, email={self.email}, nickname={self.nickname})"
 
@@ -82,6 +84,7 @@ class Politician(Base, DateTimeMixin):
     jurisdiction: Mapped[List["Jurisdiction"]] = relationship(
         back_populates="politician"
     )
+    admin_log: Mapped[List["AdminLog"]] = relationship(back_populates="politician")
 
     def __repr__(self):
         return f"Politician(id={self.id}, name={self.name}, political_party={self.political_party})"
@@ -202,3 +205,23 @@ class Jurisdiction(Base, DateTimeMixin):
 
     def __repr__(self):
         return f"Constituency(id={self.id}, politician_id={self.politician_id}, constituency_id={self.constituency_id})"
+
+
+class AdminLog(Base, DateTimeMixin):
+    __tablename__ = "admin_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    admin_id: Mapped[int] = mapped_column(
+        ForeignKey("admin.id"), nullable=False, comment="관리자 id"
+    )
+    politician_id: Mapped[int] = mapped_column(
+        ForeignKey("politician.id"), nullable=True, comment="의원 id"
+    )
+    action = Column(String(50), nullable=False, comment="관리자 활동 종류")
+    detail = Column(JSON, nullable=True, comment="기타 정보")
+
+    admin: Mapped["Admin"] = relationship(back_populates="admin_log")
+    politician: Mapped["Politician"] = relationship(back_populates="admin_log")
+
+    def __repr__(self):
+        return f"AdminLog(admin_id={self.admin_id}, action={self.action}, politician_id={self.politician_id}, detail={self.detail})"

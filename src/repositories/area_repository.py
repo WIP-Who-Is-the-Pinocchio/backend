@@ -41,10 +41,9 @@ class AreaRepository:
     def get_constituency_id(
         self, data: Union[ConstituencyReqSchema or JurisdictionUpdateReqSchema]
     ) -> int:
-        id, region, district, section = data
-        region_name = region[1]
-        district_name = district[1]
-        section_name = section[1]
+        region_name = data.region
+        district_name = data.district
+        section_name = data.section
 
         region_id = self.get_region_id(region_name)
         if not region_id:

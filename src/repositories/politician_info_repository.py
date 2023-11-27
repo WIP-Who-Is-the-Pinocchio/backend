@@ -69,6 +69,13 @@ class PoliticianInfoRepository:
         self.session.execute(query)
 
     def select_politician_data_by_id(self, politician_id: int):
+        query = select(
+            self.politician_model,
+        ).filter_by(id=politician_id)
+        select_result = self.session.execute(query).scalar()
+        return select_result
+
+    def select_total_politician_data_by_id(self, politician_id: int):
         query = (
             select(
                 self.politician_model,

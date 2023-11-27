@@ -9,7 +9,7 @@ from config import settings
 from admin.auth.auth_router import router as AdminAuthApiRouter
 from admin.dev.dev_router import router as AdminDevApiRouter
 from admin.politician.politician_router import router as AdminPoliticianApiRouter
-
+from admin.dashboard.dashboard_router import router as AdminDashboardApiRouter
 
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.setLevel(logging.INFO)
@@ -59,12 +59,15 @@ app.include_router(
     AdminAuthApiRouter, prefix=f"{default_admin_prefix}/auth", tags=["admin_auth"]
 )
 app.include_router(
-    AdminDevApiRouter, prefix=f"{default_admin_prefix}/dev", tags=["admin_dev"]
-)
-app.include_router(
     AdminPoliticianApiRouter,
     prefix=f"{default_admin_prefix}/politician",
     tags=["admin_politician"],
+)
+app.include_router(
+    AdminDashboardApiRouter, prefix=f"{default_admin_prefix}", tags=["admin_dashboard"]
+)
+app.include_router(
+    AdminDevApiRouter, prefix=f"{default_admin_prefix}/dev", tags=["admin_dev"]
 )
 
 initialize_log = f"""
