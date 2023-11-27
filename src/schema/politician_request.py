@@ -56,7 +56,7 @@ class SinglePoliticianRequest(BaseModel):
     base_info: PoliticianReqSchema
     promise_count_detail: PromiseCountDetailReqSchema
     constituency: List[ConstituencyReqSchema]
-    committee: List[PoliticianCommitteeReqSchema]
+    committee: Optional[List[PoliticianCommitteeReqSchema]] = None
 
 
 class PoliticianCommitteeUpdateReqSchema(BaseModel):
@@ -78,4 +78,4 @@ class SinglePoliticianUpdateRequest(BaseModel):
     base_info: PoliticianReqSchema
     promise_count_detail: PromiseCountDetailReqSchema
     jurisdiction: List[JurisdictionUpdateReqSchema]
-    committee: List[PoliticianCommitteeUpdateReqSchema]
+    committee: Optional[List[PoliticianCommitteeUpdateReqSchema]] = None
