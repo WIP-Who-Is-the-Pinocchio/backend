@@ -323,7 +323,7 @@ class PoliticianService:
             abbreviated_area_text = re.sub(r"(특별|광역)시", "", area_text)
             region_searched_keyword_replacements = {
                 "서울시": "서울",
-                "부산시": "부선",
+                "부산시": "부산",
                 "인천시": "인천",
                 "대구시": "대구",
                 "광주시": "광주",

@@ -122,6 +122,30 @@ class AreaRepository:
         select_result = self.session.execute(query).all()
         return select_result
 
+    def select_constituency_data_by_id(self, constituency_id: int):
+        query = (
+            select(
+                self.region_model.region,
+                self.constituency_model.district,
+                self.constituency_model.section,
+            )
+            .select_from(self.constituency_model)
+            .filter_by(id=constituency_id)
+            .join(
+                self.region_model,
+                self.region_model.id == self.constituency_model.region_id,
+            )
+        )
+        select_result = self.session.execute(query).all()
+        return select_result[0]
+
+    def select_politician_id_by_constituency_id(self, constituency_id: int):
+        query = select(self.jurisdiction_model.politician_id).filter_by(
+            constituency_id=constituency_id
+        )
+        select_result = self.session.execute(query).all()
+        return select_result
+
     def select_jurisdiction_data_by_random_text(
         self, assembly_term: int, random_text: str, offset: int, size: int
     ):
@@ -221,3 +245,15 @@ class AreaRepository:
             self.jurisdiction_model.id == jurisdiction_id
         )
         self.session.execute(query)
+
+    def get_duplicated_jurisdiction(self):
+        query = (
+            select(
+                self.jurisdiction_model.constituency_id,
+                func.count().label("duplicated_count"),
+            )
+            .group_by(self.jurisdiction_model.constituency_id)
+            .having(func.count(self.jurisdiction_model.constituency_id) > 1)
+        )
+        search_result = self.session.execute(query).all()
+        return search_result
