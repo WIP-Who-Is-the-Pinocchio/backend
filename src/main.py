@@ -11,6 +11,8 @@ from admin.dev.dev_router import router as AdminDevApiRouter
 from admin.politician.politician_router import router as AdminPoliticianApiRouter
 from admin.dashboard.dashboard_router import router as AdminDashboardApiRouter
 
+from public.public_router import router as PublicApiRouter
+
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.setLevel(logging.INFO)
 
@@ -68,6 +70,12 @@ app.include_router(
 )
 app.include_router(
     AdminDevApiRouter, prefix=f"{default_admin_prefix}/dev", tags=["admin_dev"]
+)
+
+public_api_version = 1
+default_public_prefix = f"/wip/public/api/v{public_api_version}"
+app.include_router(
+    PublicApiRouter, prefix=f"{default_public_prefix}", tags=["public_web"]
 )
 
 initialize_log = f"""
