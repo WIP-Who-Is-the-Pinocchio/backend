@@ -317,7 +317,7 @@ class PoliticianService:
                 politician_res.assembly_term = assembly_term
                 politician_res.constituency = jurisdiction_list
                 return_res.append(politician_res)
-                return return_res
+            return return_res
         else:
             area_text = jurisdiction.replace(" ", "")
             abbreviated_area_text = re.sub(r"(특별|광역)시", "", area_text)
