@@ -11,6 +11,7 @@ class ConstituencyReqSchema(BaseModel):
 
 class PoliticianReqSchema(BaseModel):
     name: str
+    assembly_term: int
     profile_url: Optional[str] = None
     political_party: str
     elected_count: int
@@ -52,7 +53,6 @@ class PoliticianCommitteeReqSchema(BaseModel):
 
 
 class SinglePoliticianRequest(BaseModel):
-    assembly_term: int
     base_info: PoliticianReqSchema
     promise_count_detail: PromiseCountDetailReqSchema
     constituency: List[ConstituencyReqSchema]
@@ -74,7 +74,6 @@ class JurisdictionUpdateReqSchema(BaseModel):
 
 class SinglePoliticianUpdateRequest(BaseModel):
     politician_id: int
-    assembly_term: int
     base_info: PoliticianReqSchema
     promise_count_detail: PromiseCountDetailReqSchema
     jurisdiction: List[JurisdictionUpdateReqSchema]

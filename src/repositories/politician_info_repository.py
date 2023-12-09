@@ -103,20 +103,36 @@ class PoliticianInfoRepository:
         select_result = self.session.execute(query).scalar()
         return select_result
 
-    def get_politician_list_data_for_admin(self, offset: int, size: int):
+    def get_politician_list_data_for_admin(
+        self, assembly_term: int, offset: int, size: int
+    ):
         total_politician_data = self.session.execute(
-            select(self.politician_model).offset(offset).limit(size)
+            select(self.politician_model)
+            .filter_by(assembly_term=assembly_term)
+            .offset(offset)
+            .limit(size)
         ).all()
         return total_politician_data
 
     def get_politician_search_data_for_admin(
-        self, offset: int, size: int, name: str = None, party: str = None
+        self,
+        offset: int,
+        size: int,
+        assembly_term: int,
+        name: str = None,
+        party: str = None,
     ):
         query = select(self.politician_model)
         filtered_query = (
-            query.filter(self.politician_model.name.like(f"%{name}%"))
+            query.filter(
+                self.politician_model.assembly_term == assembly_term,
+                self.politician_model.name.like(f"%{name}%"),
+            )
             if name
-            else query.filter(self.politician_model.political_party.like(f"%{party}%"))
+            else query.filter(
+                self.politician_model.assembly_term == assembly_term,
+                self.politician_model.political_party.like(f"%{party}%"),
+            )
         )
         search_result = self.session.execute(
             filtered_query.offset(offset).limit(size)
