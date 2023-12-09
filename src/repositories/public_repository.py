@@ -23,10 +23,7 @@ def get_constituency_data_from_db(assembly_term, region_name):
                 Constituency.section,
             )
             .select_from(Constituency)
-            .filter_by(
-                region_id=region_id,
-                assembly_term=assembly_term,
-            )
+            .filter_by(region_id=region_id)
             .join(
                 Region,
                 Region.id == Constituency.region_id,

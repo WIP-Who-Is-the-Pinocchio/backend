@@ -23,9 +23,7 @@ def get_public_constituency_data(
         return cached_data
     logger.info(f"public constituency_data cache none")
 
-    updated_data = area_repository.select_constituency_data_by_region(
-        assembly_term, region_name
-    )
+    updated_data = area_repository.select_constituency_data_by_region(region_name)
     constituency_list = [
         PublicConstituencyResSchema(region=data[0], district=data[1], section=data[2])
         for data in updated_data
