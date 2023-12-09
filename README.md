@@ -12,11 +12,11 @@
 
 ### 필요 환경
 1. Docker 설치
-2. MySQL 이미지 다운로드
+2. MySQL 이미지 다운로드(생략 가능)
 ```bash
 docker pull mysql:latest
 ```
-3. Redis 이미지 다운로드
+3. Redis 이미지 다운로드(생략 가능)
 ```bash
 docker pull redis:latest
 ```
@@ -41,14 +41,3 @@ docker-compose up -d --build
 ```bash
 docker-compose down
 ```
-
-## Test
-- 전체 API 테스트
-    ```bash
-    pytest src/tests
-    ```
-  
-- Admin auth API 모듈 테스트
-    ```bash
-    pytest src/tests/test_admin_auth.py
-    ```
