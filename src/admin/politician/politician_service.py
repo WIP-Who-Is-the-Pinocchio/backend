@@ -222,9 +222,7 @@ class PoliticianService:
         logger.info(f"admin {admin_id} updated politician data: {politician_id}")
         return AddPoliticianDataRes(politician_id=politician_id)
 
-    def get_politician_by_id(
-        self, assembly_term: int, politician_id: int
-    ) -> GetSinglePoliticianDataRes:
+    def get_politician_by_id(self, politician_id: int) -> GetSinglePoliticianDataRes:
         politician_data = self.politician_info_repo.select_total_politician_data_by_id(
             politician_id
         )
@@ -233,22 +231,19 @@ class PoliticianService:
         )
         jurisdiction_list = [
             JurisdictionResSchema(
-                id=data[0], region=data[2], district=data[3], section=data[4]
+                id=data[0], region=data[1], district=data[2], section=data[3]
             )
             for data in jurisdiction_data
         ]
 
         return_res = GetSinglePoliticianDataRes.model_validate(politician_data)
-        return_res.assembly_term = assembly_term
         return_res.constituency = jurisdiction_list
         return return_res
 
-    def get_constituency_data(
-        self, assembly_term: int, region: str
-    ) -> List[ConstituencyResSchema]:
+    def get_constituency_data(self, region: str) -> List[ConstituencyResSchema]:
         region_name = RegionType[region.upper()].value[1]
         constituency_obj_list = self.area_repo.select_constituency_data_by_region(
-            assembly_term, region_name
+            region_name
         )
         constituency_list = [
             ConstituencyResSchema(region=data[0], district=data[1], section=data[2])
@@ -261,7 +256,7 @@ class PoliticianService:
     ) -> List[GetPoliticianElementOfListRes]:
         offset = page * size
         politician_list = self.politician_info_repo.get_politician_list_data_for_admin(
-            offset, size
+            assembly_term, offset, size
         )
         return_res = []
         for politician in politician_list:
@@ -272,12 +267,11 @@ class PoliticianService:
             )
             jurisdiction_list = [
                 JurisdictionResSchema(
-                    id=data[0], region=data[2], district=data[3], section=data[4]
+                    id=data[0], region=data[1], district=data[2], section=data[3]
                 )
                 for data in jurisdiction_data
             ]
             politician_res = GetPoliticianElementOfListRes.model_validate(politician[0])
-            politician_res.assembly_term = assembly_term
             politician_res.constituency = jurisdiction_list
             return_res.append(politician_res)
         return return_res
@@ -295,7 +289,11 @@ class PoliticianService:
         if name or party:
             politician_list = (
                 self.politician_info_repo.get_politician_search_data_for_admin(
-                    offset=offset, size=size, name=name, party=party
+                    offset=offset,
+                    size=size,
+                    assembly_term=assembly_term,
+                    name=name,
+                    party=party,
                 )
             )
             return_res = []
@@ -307,14 +305,13 @@ class PoliticianService:
                 )
                 jurisdiction_list = [
                     JurisdictionResSchema(
-                        id=data[0], region=data[2], district=data[3], section=data[4]
+                        id=data[0], region=data[1], district=data[2], section=data[3]
                     )
                     for data in jurisdiction_data
                 ]
                 politician_res = GetPoliticianElementOfListRes.model_validate(
                     politician[0]
                 )
-                politician_res.assembly_term = assembly_term
                 politician_res.constituency = jurisdiction_list
                 return_res.append(politician_res)
             return return_res
@@ -344,7 +341,7 @@ class PoliticianService:
                 logger.info(f"Only constituency searched: {abbreviated_area_text}")
                 jurisdiction_politician_id_list = (
                     self.area_repo.select_jurisdiction_data_by_random_text(
-                        assembly_term, abbreviated_area_text, offset, size
+                        abbreviated_area_text, offset, size
                     )
                 )
             else:
@@ -356,7 +353,7 @@ class PoliticianService:
                     logger.info(f"Only region searched: {abbreviated_area_text}")
                     jurisdiction_politician_id_list = (
                         self.area_repo.select_jurisdiction_data_by_region_id_and_text(
-                            offset, size, assembly_term, region_id
+                            offset, size, region_id
                         )
                     )
                 else:
@@ -367,7 +364,6 @@ class PoliticianService:
                         self.area_repo.select_jurisdiction_data_by_region_id_and_text(
                             offset,
                             size,
-                            assembly_term,
                             region_id,
                             area_text_without_region,
                         )
@@ -388,14 +384,13 @@ class PoliticianService:
                 )
                 jurisdiction_list = [
                     JurisdictionResSchema(
-                        id=data[0], region=data[2], district=data[3], section=data[4]
+                        id=data[0], region=data[1], district=data[2], section=data[3]
                     )
                     for data in jurisdiction_data
                 ]
                 politician_res = GetPoliticianElementOfListRes.model_validate(
                     politician_data
                 )
-                politician_res.assembly_term = assembly_term
                 politician_res.constituency = jurisdiction_list
                 return_res.append(politician_res)
             return return_res

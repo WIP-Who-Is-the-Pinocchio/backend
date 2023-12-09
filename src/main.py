@@ -68,9 +68,9 @@ app.include_router(
 app.include_router(
     AdminDashboardApiRouter, prefix=f"{default_admin_prefix}", tags=["admin_dashboard"]
 )
-app.include_router(
-    AdminDevApiRouter, prefix=f"{default_admin_prefix}/dev", tags=["admin_dev"]
-)
+# app.include_router(
+#     AdminDevApiRouter, prefix=f"{default_admin_prefix}/dev", tags=["admin_dev"]
+# )
 
 public_api_version = 1
 default_public_prefix = f"/wip/public/api/v{public_api_version}"

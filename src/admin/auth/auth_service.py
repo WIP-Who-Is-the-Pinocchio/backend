@@ -247,5 +247,7 @@ async def check_nickname_uniqueness(**kwargs) -> NicknameUniquenessResponse:
 
     search_result = admin_repository.get_admin_data(nickname=nickname)
     if search_result:
-        return NicknameUniquenessResponse(detail="Nickname already exists.")
-    return NicknameUniquenessResponse(detail="Available nickname.")
+        return NicknameUniquenessResponse(
+            is_available=False, detail="Nickname already exists."
+        )
+    return NicknameUniquenessResponse(is_available=True, detail="Available nickname.")

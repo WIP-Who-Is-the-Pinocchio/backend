@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import bcrypt
 from fastapi import HTTPException
 from jose import jwt, ExpiredSignatureError
+from pytz import timezone
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from schema.token_response import TokenDecodeResponse
@@ -39,7 +40,7 @@ class AuthManager:
         nickname: str,
         uuid_jti: str,
     ) -> str:
-        current_time = datetime.now()
+        current_time = datetime.now(timezone("Asia/Seoul"))
         return jwt.encode(
             {
                 "sub": json.dumps([admin_id, nickname]),
@@ -57,7 +58,7 @@ class AuthManager:
         nickname: str,
         uuid_jti: str,
     ) -> str:
-        current_time = datetime.now()
+        current_time = datetime.now(timezone("Asia/Seoul"))
         return jwt.encode(
             {
                 "sub": json.dumps([admin_id, nickname]),

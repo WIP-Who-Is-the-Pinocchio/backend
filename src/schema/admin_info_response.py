@@ -11,4 +11,5 @@ class AdminInfoResponse(BaseModel):
 
 
 class NicknameUniquenessResponse(BaseModel):
+    is_available: bool
     detail: str

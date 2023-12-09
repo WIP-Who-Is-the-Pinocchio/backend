@@ -81,7 +81,6 @@ class AreaRepository:
         query = (
             select(
                 self.jurisdiction_model.id,
-                self.constituency_model.assembly_term,
                 self.region_model.region,
                 self.constituency_model.district,
                 self.constituency_model.section,
@@ -101,7 +100,7 @@ class AreaRepository:
         select_result = self.session.execute(query).all()
         return select_result
 
-    def select_constituency_data_by_region(self, assembly_term: int, region_name: str):
+    def select_constituency_data_by_region(self, region_name: str):
         region_id = self.get_region_id(region_name)
         query = (
             select(
@@ -110,10 +109,7 @@ class AreaRepository:
                 self.constituency_model.section,
             )
             .select_from(self.constituency_model)
-            .filter_by(
-                region_id=region_id,
-                assembly_term=assembly_term,
-            )
+            .filter_by(region_id=region_id)
             .join(
                 self.region_model,
                 self.region_model.id == self.constituency_model.region_id,
@@ -147,7 +143,7 @@ class AreaRepository:
         return select_result
 
     def select_jurisdiction_data_by_random_text(
-        self, assembly_term: int, random_text: str, offset: int, size: int
+        self, random_text: str, offset: int, size: int
     ):
         distinct_subquery = (
             select(
@@ -156,10 +152,7 @@ class AreaRepository:
                 )
             )
             .select_from(self.jurisdiction_model)
-            .filter(
-                self.constituency_model.district.like(f"%{random_text}%"),
-                self.constituency_model.assembly_term == assembly_term,
-            )
+            .filter(self.constituency_model.district.like(f"%{random_text}%"))
             .join(
                 self.constituency_model,
                 self.constituency_model.id == self.jurisdiction_model.constituency_id,
@@ -187,7 +180,6 @@ class AreaRepository:
         self,
         offset: int,
         size: int,
-        assembly_term: int,
         region_id: int,
         constituency_text: str = None,
     ):
@@ -198,10 +190,7 @@ class AreaRepository:
                 )
             )
             .select_from(self.jurisdiction_model)
-            .filter(
-                self.constituency_model.region_id == region_id,
-                self.constituency_model.assembly_term == assembly_term,
-            )
+            .filter(self.constituency_model.region_id == region_id)
             .join(
                 self.constituency_model,
                 self.constituency_model.id == self.jurisdiction_model.constituency_id,

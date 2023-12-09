@@ -1,8 +1,8 @@
+import json
 from datetime import datetime
 from typing import List
 
 from sqlalchemy import (
-    Column,
     Integer,
     String,
     DateTime,
@@ -16,8 +16,8 @@ Base = declarative_base()
 
 
 class DateTimeMixin:
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
-    updated_at = Column(
+    created_at = mapped_column(DateTime, default=datetime.now, nullable=False)
+    updated_at = mapped_column(
         DateTime, default=datetime.now, onupdate=datetime.now, nullable=False
     )
 
@@ -26,11 +26,11 @@ class Admin(Base, DateTimeMixin):
     __tablename__ = "admin"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    email = Column(String(256), unique=True, nullable=False)
-    password = Column(String(256), nullable=False)
-    nickname = Column(String(256), unique=True, nullable=False)
-    hashed_refresh_token = Column(String(256), nullable=True)
-    uuid_jti = Column(String(256), nullable=True)
+    email: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(256), nullable=False)
+    nickname: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
+    hashed_refresh_token: Mapped[str] = mapped_column(String(256), nullable=True)
+    uuid_jti: Mapped[str] = mapped_column(String(256), nullable=True)
 
     admin_log: Mapped[List["AdminLog"]] = relationship(back_populates="admin")
 
@@ -58,24 +58,51 @@ class Politician(Base, DateTimeMixin):
     __tablename__ = "politician"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name = Column(String(10), nullable=False, comment="의원 이름")
-    profile_url = Column(String(256), nullable=True, comment="프로필 주소")
-    political_party = Column(String(30), nullable=False, comment="소속 정당")
-    elected_count = Column(Integer, nullable=False, comment="당선 횟수")
-    total_promise_count = Column(Integer, nullable=True, comment="총 공약수")
-    completed_promise_count = Column(Integer, nullable=True, comment="완료 공약수")
-    in_progress_promise_count = Column(Integer, nullable=True, comment="추진 중인 공약수")
-    pending_promise_count = Column(Integer, nullable=True, comment="보류 공약수")
-    discarded_promise_count = Column(Integer, nullable=True, comment="폐기 공약수")
-    other_promise_count = Column(Integer, nullable=True, comment="기타 공약수")
-    resolve_required_promise_count = Column(
+    assembly_term: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=21, comment="국회 회기"
+    )
+    name: Mapped[str] = mapped_column(String(10), nullable=False, comment="의원 이름")
+    profile_url: Mapped[str] = mapped_column(
+        String(256), nullable=True, comment="프로필 주소"
+    )
+    political_party: Mapped[str] = mapped_column(
+        String(30), nullable=False, comment="소속 정당"
+    )
+    elected_count: Mapped[int] = mapped_column(Integer, nullable=False, comment="당선 횟수")
+    total_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="총 공약수"
+    )
+    completed_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="완료 공약수"
+    )
+    in_progress_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="추진 중인 공약수"
+    )
+    pending_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="보류 공약수"
+    )
+    discarded_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="폐기 공약수"
+    )
+    other_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="기타 공약수"
+    )
+    resolve_required_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="필요 입법 공약 총 수"
     )
-    resolved_promise_count = Column(Integer, nullable=True, comment="입법 의결 완료 공약 총 수")
-    total_required_funds = Column(Integer, nullable=True, comment="필요 재정 총액")
-    total_secured_funds = Column(Integer, nullable=True, comment="확보 재정 총액")
-    total_executed_funds = Column(Integer, nullable=True, comment="집행 재정 총액")
-    notes = Column(JSON, nullable=True)
+    resolved_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="입법 의결 완료 공약 총 수"
+    )
+    total_required_funds: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="필요 재정 총액"
+    )
+    total_secured_funds: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="확보 재정 총액"
+    )
+    total_executed_funds: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="집행 재정 총액"
+    )
+    notes: Mapped[json] = mapped_column(JSON, nullable=True)
 
     promise_count_detail: Mapped["PromiseCountDetail"] = relationship(
         back_populates="politician"
@@ -85,6 +112,9 @@ class Politician(Base, DateTimeMixin):
         back_populates="politician"
     )
     admin_log: Mapped[List["AdminLog"]] = relationship(back_populates="politician")
+    public_search_log: Mapped[List["PublicSearchLog"]] = relationship(
+        back_populates="politician"
+    )
 
     def __repr__(self):
         return f"Politician(id={self.id}, name={self.name}, political_party={self.political_party})"
@@ -97,43 +127,55 @@ class PromiseCountDetail(Base, DateTimeMixin):
     politician_id: Mapped[int] = mapped_column(
         ForeignKey("politician.id"), nullable=False, comment="의원 id"
     )
-    completed_national_promise_count = Column(
+    completed_national_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="완료 국정 공약수"
     )
-    total_national_promise_count = Column(Integer, nullable=True, comment="총 국정 공약수")
-    completed_local_promise_count = Column(Integer, nullable=True, comment="완료 지역 공약수")
-    total_local_promise_count = Column(Integer, nullable=True, comment="총 지역 공약수")
-    completed_legislative_promise_count = Column(
+    total_national_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="총 국정 공약수"
+    )
+    completed_local_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="완료 지역 공약수"
+    )
+    total_local_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="총 지역 공약수"
+    )
+    completed_legislative_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="완료 입법 공약수"
     )
-    total_legislative_promise_count = Column(Integer, nullable=True, comment="총 입법 공약수")
-    completed_financial_promise_count = Column(
+    total_legislative_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="총 입법 공약수"
+    )
+    completed_financial_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="완료 재정 공약수"
     )
-    total_financial_promise_count = Column(Integer, nullable=True, comment="총 재정 공약수")
-    completed_in_term_promise_count = Column(
+    total_financial_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="총 재정 공약수"
+    )
+    completed_in_term_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="완료 임기 내 공약수"
     )
-    total_in_term_promise_count = Column(Integer, nullable=True, comment="총 임기 내 공약수")
-    completed_after_term_promise_count = Column(
+    total_in_term_promise_count: Mapped[int] = mapped_column(
+        Integer, nullable=True, comment="총 임기 내 공약수"
+    )
+    completed_after_term_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="완료 임기 후 공약수"
     )
-    total_after_term_promise_count = Column(
+    total_after_term_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="총 임기 후 공약수"
     )
-    completed_ongoing_business_promise_count = Column(
+    completed_ongoing_business_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="완료 지속 사업 공약수"
     )
-    total_ongoing_business_promise_count = Column(
+    total_ongoing_business_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="총 지속 사업 공약수"
     )
-    completed_new_business_promise_count = Column(
+    completed_new_business_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="완료 신규 사업 공약수"
     )
-    total_new_business_promise_count = Column(
+    total_new_business_promise_count: Mapped[int] = mapped_column(
         Integer, nullable=True, comment="총 신규 사업 공약수"
     )
-    notes = Column(JSON, nullable=True)
+    notes: Mapped[json] = mapped_column(JSON, nullable=True)
 
     politician: Mapped["Politician"] = relationship(
         back_populates="promise_count_detail"
@@ -150,8 +192,10 @@ class Committee(Base, DateTimeMixin):
     politician_id: Mapped[int] = mapped_column(
         ForeignKey("politician.id"), nullable=False, comment="의원 id"
     )
-    is_main = Column(Boolean, nullable=False, comment="해당 의원의 대표 위원회 여부")
-    name = Column(String(30), nullable=False, comment="위원회 명칭")
+    is_main: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, comment="해당 의원의 대표 위원회 여부"
+    )
+    name: Mapped[str] = mapped_column(String(30), nullable=False, comment="위원회 명칭")
 
     politician: Mapped["Politician"] = relationship(back_populates="committee")
 
@@ -163,7 +207,7 @@ class Region(Base, DateTimeMixin):
     __tablename__ = "region"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    region = Column(String(20), nullable=False, comment="지역구")
+    region: Mapped[str] = mapped_column(String(20), nullable=False, comment="지역구")
 
     constituency: Mapped[List["Constituency"]] = relationship(back_populates="region")
 
@@ -175,12 +219,11 @@ class Constituency(Base, DateTimeMixin):
     __tablename__ = "constituency"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    assembly_term = Column(Integer, nullable=False, comment="국회 회기")
     region_id: Mapped[int] = mapped_column(
         ForeignKey("region.id"), nullable=False, comment="지역구 id"
     )
-    district = Column(String(20), nullable=True, comment="세부 지역구")
-    section = Column(String(20), nullable=True, comment="분구")
+    district: Mapped[str] = mapped_column(String(20), nullable=True, comment="세부 지역구")
+    section: Mapped[str] = mapped_column(String(20), nullable=True, comment="분구")
 
     region: Mapped["Region"] = relationship(back_populates="constituency")
     jurisdiction: Mapped["Jurisdiction"] = relationship(back_populates="constituency")
@@ -217,11 +260,25 @@ class AdminLog(Base, DateTimeMixin):
     politician_id: Mapped[int] = mapped_column(
         ForeignKey("politician.id"), nullable=True, comment="의원 id"
     )
-    action = Column(String(50), nullable=False, comment="관리자 활동 종류")
-    detail = Column(JSON, nullable=True, comment="기타 정보")
+    action: Mapped[str] = mapped_column(String(50), nullable=False, comment="관리자 활동 종류")
+    detail: Mapped[json] = mapped_column(JSON, nullable=True, comment="기타 정보")
 
     admin: Mapped["Admin"] = relationship(back_populates="admin_log")
     politician: Mapped["Politician"] = relationship(back_populates="admin_log")
 
     def __repr__(self):
         return f"AdminLog(admin_id={self.admin_id}, action={self.action}, politician_id={self.politician_id}, detail={self.detail})"
+
+
+class PublicSearchLog(Base, DateTimeMixin):
+    __tablename__ = "public_search_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    search_category: Mapped[str] = mapped_column(
+        String(50), nullable=False, comment="검색어 분류"
+    )
+    politician_id: Mapped[int] = mapped_column(
+        ForeignKey("politician.id"), nullable=True, comment="의원 id"
+    )
+
+    politician: Mapped["Politician"] = relationship(back_populates="public_search_log")
