@@ -50,8 +50,8 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
-@app.get("/", status_code=HTTP_200_OK, summary="Health Check")
-def health_check_handler():
+@app.get("/health-check", status_code=HTTP_200_OK, summary="Health Check")
+def health_check_handler() -> str:
     return "For the better world by WIP"
 
 
