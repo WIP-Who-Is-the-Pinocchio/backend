@@ -50,8 +50,10 @@ services:
     ports:
       - 2309:2309
     container_name: wip-app
+    env_file: .dev.env
     environment:
       - TZ=Asia/Seoul
+      - ENV=DEV
     volumes:
       - ../backend:/app
     depends_on:
