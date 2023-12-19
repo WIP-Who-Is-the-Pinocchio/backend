@@ -1,6 +1,11 @@
-# WIP Server
+# WIP(Who is the Pinocchio) Server
 
-## Requirements
+
+## ERD
+- [ERD Cloud Link](https://www.erdcloud.com/d/sKTfdwgcfSSqixzr8)
+
+
+## Dev Requirements
 
 - `Python` 3.11.5
 - `Poetry` 1.6.1
@@ -15,10 +20,6 @@
 2. MySQL 이미지 다운로드(생략 가능)
 ```bash
 docker pull mysql:latest
-```
-3. Redis 이미지 다운로드(생략 가능)
-```bash
-docker pull redis:latest
 ```
 
 
@@ -38,6 +39,12 @@ docker-compose up -d --build
 
 
 ### 종료
-```bash
-docker-compose down
-```
+- 컨테이너 종료
+  ```bash
+  docker-compose down
+  ```
+
+- 볼륨 삭제와 함께 종료
+  ```bash
+  docker-compose down -v
+  ```
