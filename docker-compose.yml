@@ -30,23 +30,10 @@ services:
     networks:
       - wip-server-net
 
-#  redis:
-#    image: redis:latest
-#    restart: 'always'
-#    ports:
-#      - 6379:6379
-#    container_name: wip-redis
-#    volumes:
-#      - in_memory_data:/data
-#    environment:
-#      TZ: Asia/Seoul
-#    networks:
-#      - wip-server-net
-
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dev.Dockerfile
     ports:
       - 2309:2309
     container_name: wip-app
