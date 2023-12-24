@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "wip-server"
+version = "0.0.1"
+description = "backend repository of wip project"
+authors = ["alsrlqor <skyup9393@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.103.2"
+uvicorn = "^0.23.2"
+sqlalchemy = "^2.0.21"
+alembic = "^1.12.0"
+pymysql = "^1.1.0"
+pydantic-settings = "^2.0.3"
+bcrypt = "^4.0.1"
+pytest = "^7.4.2"
+pytest-mock = "^3.11.1"
+httpx = "^0.25.0"
+python-jose = "^3.3.0"
+cryptography = "^41.0.4"
+email-validator = "^2.0.0.post2"
+redis = "^5.0.1"
+pytz = "^2023.3.post1"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.9.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
