@@ -9,6 +9,7 @@ from sqlalchemy import (
     JSON,
     ForeignKey,
     Boolean,
+    BigInteger,
 )
 from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
@@ -94,13 +95,13 @@ class Politician(Base, DateTimeMixin):
         Integer, nullable=True, comment="입법 의결 완료 공약 총 수"
     )
     total_required_funds: Mapped[int] = mapped_column(
-        Integer, nullable=True, comment="필요 재정 총액"
+        BigInteger, nullable=True, comment="필요 재정 총액"
     )
     total_secured_funds: Mapped[int] = mapped_column(
-        Integer, nullable=True, comment="확보 재정 총액"
+        BigInteger, nullable=True, comment="확보 재정 총액"
     )
     total_executed_funds: Mapped[int] = mapped_column(
-        Integer, nullable=True, comment="집행 재정 총액"
+        BigInteger, nullable=True, comment="집행 재정 총액"
     )
     notes: Mapped[json] = mapped_column(JSON, nullable=True)
 
