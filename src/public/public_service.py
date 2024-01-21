@@ -2,13 +2,18 @@ import logging
 from functools import lru_cache
 from typing import List
 
+from fastapi import HTTPException
 from sqlalchemy import select
+from starlette.status import HTTP_400_BAD_REQUEST
 
 from common.enums import RegionType
 from database.connection import engine
 from database.models import Region, Constituency
 from repositories.area_repository import AreaRepository
-from schema.politician_response import JurisdictionResSchema, GetPoliticianElementOfListRes
+from schema.politician_response import (
+    JurisdictionResSchema,
+    GetPoliticianElementOfListRes,
+)
 from schema.public_response import (
     PublicConstituencyResSchema,
     PublicPoliticianListElementResSchema,
@@ -49,7 +54,7 @@ def get_constituency_data_from_db(region_name: str):
 
 
 def get_public_constituency_data(
-        region: str, area_repository: AreaRepository
+    region: str, area_repository: AreaRepository
 ) -> List[PublicConstituencyResSchema]:
     region_name = RegionType[region.upper()].value[1]
 
@@ -102,8 +107,8 @@ async def get_public_politician_list(**kwargs):
 
         if total_promise_count:
             politician_res.promise_execution_rate = (
-                                                            completed_promise_count / total_promise_count
-                                                    ) * 100
+                completed_promise_count / total_promise_count
+            ) * 100
         politician_res.constituency = jurisdiction_list
         return_res.append(politician_res)
 
@@ -118,8 +123,10 @@ async def get_public_politician_list(**kwargs):
     return sorted_res
 
 
-async def get_public_politician_list_by_keyword(**kwargs) -> List[PublicPoliticianListElementResSchema]:
-    assembly_term = kwargs["assembly_term"],
+async def get_public_politician_list_by_keyword(
+    **kwargs,
+) -> List[PublicPoliticianListElementResSchema]:
+    assembly_term = (kwargs["assembly_term"],)
     name = kwargs["name"]
     party = kwargs["party"]
     region = kwargs["region"]
@@ -131,21 +138,17 @@ async def get_public_politician_list_by_keyword(**kwargs) -> List[PublicPolitici
 
     return_res = []
     if name or party:
-        politician_list = (
-            politician_info_repo.get_politician_search_data_for_admin(
-                offset=offset,
-                size=size,
-                assembly_term=assembly_term,
-                name=name,
-                party=party,
-            )
+        politician_list = politician_info_repo.get_politician_search_data_for_admin(
+            offset=offset,
+            size=size,
+            assembly_term=assembly_term,
+            name=name,
+            party=party,
         )
 
         for politician in politician_list:
-            jurisdiction_data = (
-                area_repo.select_jurisdiction_data_by_politician_id(
-                    politician[0].id
-                )
+            jurisdiction_data = area_repo.select_jurisdiction_data_by_politician_id(
+                politician[0].id
             )
             jurisdiction_list = [
                 JurisdictionResSchema(
@@ -162,8 +165,8 @@ async def get_public_politician_list_by_keyword(**kwargs) -> List[PublicPolitici
 
             if total_promise_count:
                 politician_res.promise_execution_rate = (
-                                                                completed_promise_count / total_promise_count
-                                                        ) * 100
+                    completed_promise_count / total_promise_count
+                ) * 100
             politician_res.constituency = jurisdiction_list
             return_res.append(politician_res)
     else:
@@ -180,6 +183,11 @@ async def get_public_politician_list_by_keyword(**kwargs) -> List[PublicPolitici
             "jeju": "제주",
         }
 
+        if region not in region_searched_keyword_replacements.keys():
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST, detail="Invalid region query string"
+            )
+
         area = region_searched_keyword_replacements[region]
         region_data = area_repo.get_region_data_by_random_text(area)
 
@@ -191,15 +199,11 @@ async def get_public_politician_list_by_keyword(**kwargs) -> List[PublicPolitici
 
         for politician in jurisdiction_politician_id_list:
             politician_id = politician[0]
-            politician_data = (
-                politician_info_repo.select_total_politician_data_by_id(
-                    politician_id
-                )
+            politician_data = politician_info_repo.select_total_politician_data_by_id(
+                politician_id
             )
-            jurisdiction_data = (
-                area_repo.select_jurisdiction_data_by_politician_id(
-                    politician_id
-                )
+            jurisdiction_data = area_repo.select_jurisdiction_data_by_politician_id(
+                politician_id
             )
             jurisdiction_list = [
                 JurisdictionResSchema(
@@ -216,8 +220,8 @@ async def get_public_politician_list_by_keyword(**kwargs) -> List[PublicPolitici
 
             if total_promise_count:
                 politician_res.promise_execution_rate = (
-                                                                completed_promise_count / total_promise_count
-                                                        ) * 100
+                    completed_promise_count / total_promise_count
+                ) * 100
             politician_res.constituency = jurisdiction_list
             return_res.append(politician_res)
 
