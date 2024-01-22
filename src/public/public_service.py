@@ -80,8 +80,8 @@ async def get_public_politician_list(**kwargs):
     sort_type = kwargs["sort_type"]
     page = kwargs["page"]
     size = kwargs["size"]
-    politician_info_repo = kwargs["politician_info_repository"]
-    area_repo = kwargs["area_repository"]
+    politician_info_repo = kwargs["politician_info_repo"]
+    area_repo = kwargs["area_repo"]
 
     offset = page * size
     politician_list = politician_info_repo.get_politician_list_data_for_admin(
@@ -130,17 +130,23 @@ async def get_public_politician_list_by_keyword(
     name = kwargs["name"]
     party = kwargs["party"]
     region = kwargs["region"]
+    sort_type = kwargs["sort_type"]
     page = kwargs["page"]
     size = kwargs["size"]
     offset = page * size
     politician_info_repo = kwargs["politician_info_repository"]
     area_repo = kwargs["area_repository"]
 
-    if [name, party, region].count(None) is not 2:
+    filter_none_count = [name, party, region].count(None)
+    print(filter_none_count)
+
+    if filter_none_count < 2:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail="Only one filter condition is required",
+            detail="Only 0 or 1 filter condition is required",
         )
+    if filter_none_count == 3:
+        return await get_public_politician_list(**locals())
 
     return_res = []
     if name or party:
@@ -231,11 +237,12 @@ async def get_public_politician_list_by_keyword(
             politician_res.constituency = jurisdiction_list
             return_res.append(politician_res)
 
+    is_reverse = True if sort_type == "desc" else False
     sorted_res = sorted(
         return_res,
         key=lambda x: x.promise_execution_rate
         if x.promise_execution_rate is not None
         else float("-inf"),
-        reverse=True,
+        reverse=is_reverse,
     )
     return sorted_res
