@@ -136,6 +136,12 @@ async def get_public_politician_list_by_keyword(
     politician_info_repo = kwargs["politician_info_repository"]
     area_repo = kwargs["area_repository"]
 
+    if [name, party, region].count(None) is not 2:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Only one filter condition is required",
+        )
+
     return_res = []
     if name or party:
         politician_list = politician_info_repo.get_politician_search_data_for_admin(
